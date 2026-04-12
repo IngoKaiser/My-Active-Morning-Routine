@@ -635,7 +635,7 @@ return(
 
   {/* HEADER */}
   <div className="sticky top-0 z-40 backdrop-blur-xl" style={{background:"rgba(255,255,255,0.92)",borderBottom:"1px solid rgba(0,0,0,0.08)"}}>
-    <div className="max-w-lg mx-auto px-4 pt-3 pb-2">
+    <div className="max-w-lg mx-auto px-4 pb-2" style={{paddingTop:"max(12px, env(safe-area-inset-top))"}}>
       <div className="flex items-center justify-between mb-2">
         <div>
           <h1 className="text-sm font-bold tracking-tight" style={{fontFamily:"'Space Mono',monospace"}}>MY ACTIVE MORNING</h1>
