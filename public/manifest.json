@@ -1,9 +1,20 @@
 {
-  "name": "Calisthenics + Mobility",
-  "short_name": "Calisthenics",
+  "name": "My Active Morning Routine",
+  "short_name": "Morning Routine",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f5f5f5",
   "theme_color": "#2E7D32",
-  "icons": []
+  "icons": [
+    {
+      "src": "/favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }

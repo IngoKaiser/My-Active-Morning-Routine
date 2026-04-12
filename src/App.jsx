@@ -638,8 +638,8 @@ return(
     <div className="max-w-lg mx-auto px-4 pt-3 pb-2">
       <div className="flex items-center justify-between mb-2">
         <div>
-          <h1 className="text-base font-bold" style={{fontFamily:"'Space Mono',monospace"}}>CALISTHENICS</h1>
-          <p className="text-xs text-gray-400">+Mobility · ~{Math.round(totalSec/60)} Min.</p>
+          <h1 className="text-sm font-bold tracking-tight" style={{fontFamily:"'Space Mono',monospace"}}>MY ACTIVE MORNING</h1>
+          <p className="text-xs text-gray-400">Routine · ~{Math.round(totalSec/60)} Min.</p>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={()=>{setMode(m=>m==="manual"?"auto":"manual");resetAll();}}

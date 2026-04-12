@@ -1,4 +1,4 @@
-# My-Active-Morning-Routine - Calisthenics + Mobility — AI Trainer
+# MY DAILY ACTIVE ROUTINE - Calisthenics + Mobility — AI Trainer
 
 Bodyweight-Trainingsplan-App mit KI-gestützter Plananpassung. 5 Trainingstage (MO–FR), Timer, Auto-/Manuell-Modus und ein Chat-Assistent, der Übungen, Dauer, Fokus und Pausen auf Zuruf anpasst.
 
