@@ -520,7 +520,15 @@ function AiChat({ days, onUpdateDay, currentDayIdx }) {
 
 /* ═══ APP ═══ */
 export default function App(){
-const [days, setDays] = useState(() => JSON.parse(JSON.stringify(DEFAULT_DAYS)));
+const STORAGE_KEY = "mam-training-plan";
+
+const [days, setDays] = useState(() => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_DAYS));
+});
 const [dayIdx,setDayIdx]=useState(()=>({1:0,2:1,3:2,4:3,5:4})[new Date().getDay()]??0);
 const [mode,setMode]=useState("manual");
 const [cur,setCur]=useState(-1);
@@ -533,6 +541,21 @@ const scrollRef=useRef(null);
 const pendingAdvance=useRef(false);
 
 useWakeLock();
+
+// Persist plan changes to localStorage
+useEffect(() => {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(days)); } catch(e) {}
+}, [days]);
+
+const resetPlanToDefault = () => {
+  if (confirm("Trainingsplan auf Standard zurücksetzen? Alle KI-Anpassungen gehen verloren.")) {
+    localStorage.removeItem(STORAGE_KEY);
+    setDays(JSON.parse(JSON.stringify(DEFAULT_DAYS)));
+    clearInterval(tick.current);
+    setCur(-1); setRem(0); setRunning(false); setDone(new Set());
+    pendingAdvance.current = false;
+  }
+};
 
 const day=days[dayIdx];
 const tl=buildTimeline(day);
@@ -777,6 +800,12 @@ return(
     {done.size>0&&!allDone&&(
       <button onClick={resetAll} className="w-full py-3 rounded-xl text-sm font-medium text-gray-400 hover:text-gray-600 hover:bg-white mt-4">Zurücksetzen</button>
     )}
+
+    {/* Reset plan to defaults */}
+    <button onClick={resetPlanToDefault}
+      className="w-full py-2.5 rounded-xl text-xs font-medium text-gray-300 hover:text-red-400 hover:bg-red-50 mt-6 mb-4 transition-colors">
+      ↺ Trainingsplan auf Standard zurücksetzen
+    </button>
 
   </div>
 
