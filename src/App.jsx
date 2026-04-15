@@ -48,17 +48,42 @@ function useBeep(){const c=useRef(null);return useCallback((f=880,d=0.12)=>{try{
 function Ring({pct,size=38,sw=2.5,children}){const r=(size-sw*2)/2,ci=2*Math.PI*r,d=ci-(pct/100)*ci;return(<div className="relative flex-shrink-0" style={{width:size,height:size}}><svg width={size} height={size} style={{transform:"rotate(-90deg)"}}><circle cx={size/2} cy={size/2} r={r} fill="none" stroke={C.border} strokeWidth={sw}/><circle cx={size/2} cy={size/2} r={r} fill="none" stroke={C.ring} strokeWidth={sw} strokeLinecap="round" strokeDasharray={ci} strokeDashoffset={d} style={{transition:"stroke-dashoffset 0.35s ease"}}/></svg><div className="absolute inset-0 flex items-center justify-center">{children}</div></div>);}
 
 /* ═══ AI CHAT ═══ */
-const SYS=`Du bist ein Calisthenics-Trainingsplan-Assistent. REGELN: Antworte NUR auf Deutsch. Nur Trainingsplan anpassen. Kurz (2-3 Sätze + JSON). Bei Änderung: \`\`\`json{"action":"update_day","dayIndex":0,"changes":{...}}\`\`\` Übungs-Format: {"name":"...","detail":"3×30 Sek.","desc":"...","yt":"...","tag":"..."}. 5 Tage Index 0-4.`;
-function AiChat({days,onUpdateDay,di}){
-const [open,setOpen]=useState(false),[msgs,setMsgs]=useState([{role:"assistant",content:"Ich helfe dir, den Plan anzupassen.\n\nZ.B. Übungen tauschen, Dauer ändern, Fokus setzen."}]),[inp,setInp]=useState(""),[ld,setLd]=useState(false);
+const SYS=`Du bist ein Trainingsplan-Assistent für eine Bodyweight/Calisthenics Morning-Routine App.
+
+DEINE FÄHIGKEITEN:
+- Übungen austauschen, hinzufügen oder entfernen (einzelne Tage oder alle)
+- Trainingszeiten anpassen (Sätze, Sekunden pro Satz, Pausen)
+- Fokus auf bestimmte Muskelgruppen setzen
+- Gesamtdauer eines Trainingstages verkürzen oder verlängern
+- Übungen zwischen Sektionen verschieben (warmup, main, core, extra, cooldown)
+- Schwierigkeitsgrad anpassen (leichtere/schwerere Varianten)
+
+REGELN:
+- Antworte NUR auf Deutsch
+- Halte dich kurz (2-3 Sätze Erklärung + JSON-Änderung)
+- Lehne Ernährung, Medizin und Smalltalk freundlich ab
+
+Bei Änderung füge einen JSON-Block ein:
+\`\`\`json
+{"action":"update_day","dayIndex":0,"changes":{"title":"...","pauseEx":60,"pauseCore":45,"warmup":[...],"main":[...],"core":[...],"extra":[...],"cooldown":[...]}}
+\`\`\`
+
+Übungs-Format: {"name":"Name","detail":"3×30 Sek.","desc":"Kurzbeschreibung","yt":"youtube+suchbegriffe","tag":"Muskelgruppe"}
+Detail-Formate: "30 Sek." | "3×40 Sek." | "30 Sek./Seite" | "3×25 Sek./Seite" | "2 Min."
+"/Seite" = beidseitig (Links+Rechts), "/Bein" und "/Arm" ebenfalls.
+
+5 Tage (Index 0-4): MO, DI, MI, DO, FR. Gib nur geänderte Felder in changes zurück.
+Wenn der Nutzer den Plan sehen will, beschreibe ihn kurz ohne JSON.`;
+function AiChat({days,onUpdateDay,di,footerVisible}){
+const [open,setOpen]=useState(false),[msgs,setMsgs]=useState([{role:"assistant",content:"Ich kann deinen Trainingsplan anpassen. Sag mir z.B.:\n\n\u2022 Übungen tauschen oder entfernen\n\u2022 Sätze, Zeiten oder Pausen ändern\n\u2022 Fokus auf bestimmte Muskelgruppen\n\u2022 Training kürzer oder länger machen\n\u2022 Leichtere oder schwerere Varianten"}]),[inp,setInp]=useState(""),[ld,setLd]=useState(false);
 const end=useRef(null),iRef=useRef(null);
 useEffect(()=>{end.current?.scrollIntoView({behavior:"smooth"});},[msgs,ld]);
 const ctx=()=>{const L=["MO","DI","MI","DO","FR"];return days.map((d,i)=>{const s=[];["warmup","main","core","extra","cooldown"].forEach(k=>{if(d[k]?.length)s.push(`${k}:${d[k].map(e=>`${e.name}(${e.detail})`).join(",")}`);});return`${L[i]}-${d.title}\n${s.join("\n")}`;}).join("\n\n");};
 const send=async()=>{const t=inp.trim();if(!t||ld)return;setInp("");setMsgs(p=>[...p,{role:"user",content:t}]);setLd(true);try{const c=`PLAN:\n${ctx()}\nTag:${["MO","DI","MI","DO","FR"][di]}(${di})\nAnfrage:${t}`;const h=msgs.slice(1).filter(m=>m.role==="user"||m.role==="assistant");while(h.length&&h[0].role!=="user")h.shift();const tr=[...h.slice(-8),{role:"user",content:c}];const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system:SYS,messages:tr})});if(!r.ok)throw new Error();const d=await r.json();const txt=d.content?.map(b=>b.type==="text"?b.text:"").join("")||"Fehler.";const jm=txt.match(/```json\s*([\s\S]*?)\s*```/);let dt=txt.replace(/```json[\s\S]*?```/g,"").trim();if(jm){try{const p=JSON.parse(jm[1]);if(p.action==="update_day"&&typeof p.dayIndex==="number"&&p.changes){onUpdateDay(p.dayIndex,p.changes);dt+=`\n\nAnpassung übernommen.`;}}catch(e){}}setMsgs(p=>[...p,{role:"assistant",content:dt}]);}catch(e){setMsgs(p=>[...p,{role:"assistant",content:"Verbindungsfehler."}]);}setLd(false);};
-if(!open)return(<button onClick={()=>{setOpen(true);setTimeout(()=>iRef.current?.focus(),300);}} className="fixed z-50 w-11 h-11 rounded-full shadow-lg flex items-center justify-center transition-all active:scale-95" style={{bottom:"max(80px,calc(64px+env(safe-area-inset-bottom)))",right:16,background:C.text,color:"#fff"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>);
+if(!open)return(<button onClick={()=>{setOpen(true);setTimeout(()=>iRef.current?.focus(),300);}} className="fixed flex items-center justify-center rounded-full transition-all active:scale-95" style={{bottom:footerVisible?"max(76px,calc(72px+env(safe-area-inset-bottom)))":"max(24px,calc(16px+env(safe-area-inset-bottom)))",right:16,width:48,height:48,background:C.text,color:"#fff",zIndex:9999,boxShadow:"0 4px 12px rgba(0,0,0,0.25)"}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 9h8M8 13h4" opacity="0.5"/></svg></button>);
 return(<div className="fixed inset-0 z-50 flex flex-col" style={{background:"rgba(44,41,37,0.25)",backdropFilter:"blur(8px)"}}><style>{`@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}.csl{animation:su .25s ease-out}.mi{animation:fi .2s ease-out}`}</style><div className="flex-shrink-0 h-12" onClick={()=>setOpen(false)}/><div className="csl flex-1 flex flex-col rounded-t-2xl overflow-hidden" style={{background:C.bg,maxHeight:"calc(100vh-48px)"}}><div className="flex items-center justify-between px-5 py-3.5" style={{borderBottom:`1px solid ${C.border}`}}><div><div className="text-sm font-semibold" style={{color:C.text}}>Plan-Assistent</div><div className="text-xs" style={{color:C.muted}}>Trainingsplan anpassen</div></div><button onClick={()=>setOpen(false)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100" style={{color:C.muted}}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
 <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">{msgs.map((m,i)=>(<div key={i} className={`mi flex ${m.role==="user"?"justify-end":"justify-start"}`}><div className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap" style={{background:m.role==="user"?C.accent:C.card,color:m.role==="user"?"#fff":C.text,border:m.role!=="user"?`1px solid ${C.border}`:undefined,borderBottomRightRadius:m.role==="user"?6:undefined,borderBottomLeftRadius:m.role!=="user"?6:undefined}}>{m.content}</div></div>))}{ld&&<div className="mi flex justify-start"><div className="rounded-2xl px-4 py-3 flex gap-1.5 items-center" style={{background:C.card,border:`1px solid ${C.border}`,borderBottomLeftRadius:6}}>{[0,1,2].map(j=><span key={j} className="w-1.5 h-1.5 rounded-full" style={{background:C.border,animation:`pulse 1.2s ease-in-out ${j*0.15}s infinite`}}/>)}</div></div>}<div ref={end}/></div>
-<div className="px-4 pb-2 flex gap-2 overflow-x-auto" style={{scrollbarWidth:"none"}}>{[`${["Mo","Di","Mi","Do","Fr"][di]} kürzer`,"Mehr Core","Pausen ändern","Plan zeigen"].map((q,j)=>(<button key={j} onClick={()=>setInp(q)} className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors" style={{borderColor:C.border,color:C.sub}}>{q}</button>))}</div>
+<div className="px-4 pb-2 flex gap-2 overflow-x-auto" style={{scrollbarWidth:"none"}}>{[`${["Mo","Di","Mi","Do","Fr"][di]} kürzer`,"Übung tauschen","Mehr Schultern","Plan zeigen"].map((q,j)=>(<button key={j} onClick={()=>setInp(q)} className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors" style={{borderColor:C.border,color:C.sub}}>{q}</button>))}</div>
 <div className="px-4 pt-2 pb-3" style={{paddingBottom:"max(12px,env(safe-area-inset-bottom))"}}><div className="flex items-center gap-2 rounded-xl border px-3 py-2 transition-colors" style={{background:C.card,borderColor:C.border}}><input ref={iRef} type="text" value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Plan anpassen..." className="flex-1 text-sm bg-transparent outline-none placeholder-gray-300" style={{color:C.text}} disabled={ld}/><button onClick={send} disabled={!inp.trim()||ld} className="w-7 h-7 rounded-lg flex items-center justify-center text-white flex-shrink-0 transition-all" style={{background:inp.trim()&&!ld?C.accent:"#d6d3d1"}}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button></div></div></div></div>);
 }
 
@@ -109,14 +134,44 @@ useEffect(()=>{
 if(!running||cur<0)return;
 tick.current=setInterval(()=>{setRem(r=>{
 if(r<=1){clearInterval(tick.current);const s=tl[cur];
-if(s.type==="exercise"){const np=phase+1;if(np<s.totalPhases){const pps=s.sides?2:1;const needP=(np%pps===0)&&np<s.totalPhases;if(needP&&s.setPause>0){beep(660,0.08);setInSP(true);setRem(s.setPause);setPhase(np);setTimeout(()=>setRunning(true),50);}else{beep(660,0.08);setPhase(np);setInSP(false);setRem(s.secPerPhase);setTimeout(()=>setRunning(true),50);}}else{beep(880,0.14);setTimeout(()=>beep(1100,0.1),130);setDone(p=>{const n=new Set(p);n.add(cur);return n;});setInSP(false);
-// Exercise fully done — advance to next step
-if(cur<tl.length-1){pAdv.current=true;setTimeout(()=>setCur(c=>c+1),500);}else setRunning(false);
-}}else{beep(880,0.12);setDone(p=>{const n=new Set(p);n.add(cur);return n;});
-// Pause/section done — advance
-if(cur<tl.length-1){pAdv.current=true;setTimeout(()=>setCur(c=>c+1),400);}else setRunning(false);
+if(s.type==="exercise"){
+  if(inSP){
+    // Set pause just finished — now advance phase and start next set/side
+    const np=phase+1;
+    beep(660,0.1);setPhase(np);setInSP(false);setRem(s.secPerPhase);setTimeout(()=>setRunning(true),50);
+  } else {
+    const np=phase+1;
+    if(np<s.totalPhases){
+      const pps=s.sides?2:1;
+      const needP=(np%pps===0)&&np<s.totalPhases;
+      if(needP&&s.setPause>0){
+        // Phase done, need set pause BEFORE advancing phase counter
+        beep(880,0.18);setTimeout(()=>beep(660,0.12),150);
+        setInSP(true);setRem(s.setPause);
+        // DON'T advance phase yet — keep current set number visible during pause
+        setTimeout(()=>setRunning(true),50);
+      } else {
+        // Side switch within same set — advance phase immediately
+        beep(880,0.15);setTimeout(()=>beep(660,0.1),140);
+        setPhase(np);setInSP(false);setRem(s.secPerPhase);setTimeout(()=>setRunning(true),50);
+      }
+    } else {
+      // Exercise fully complete
+      beep(880,0.25);setTimeout(()=>beep(1100,0.2),150);setTimeout(()=>beep(1320,0.15),300);
+      setDone(p=>{const n=new Set(p);n.add(cur);return n;});setInSP(false);
+      if(cur<tl.length-1){pAdv.current=true;setTimeout(()=>setCur(c=>c+1),600);}else setRunning(false);
+    }
+  }
+}else{
+  // Pause/section done
+  beep(880,0.2);setTimeout(()=>beep(1100,0.15),140);
+  setDone(p=>{const n=new Set(p);n.add(cur);return n;});
+  if(cur<tl.length-1){pAdv.current=true;setTimeout(()=>setCur(c=>c+1),400);}else setRunning(false);
 }return 0;}
-if(r<=4&&!inSP&&step?.type==="exercise")beep(500,0.04);return r-1;});},1000);
+// Loud countdown for last 3 seconds
+if(r<=3){beep(r===1?1200:r===2?1000:800, 0.2);}
+else if(r<=5&&!inSP&&step?.type==="exercise")beep(500,0.05);
+return r-1;});},1000);
 return()=>clearInterval(tick.current);
 },[running,cur,phase,inSP]);
 
@@ -298,7 +353,7 @@ return(
 </div>
 )}
 
-<AiChat days={days} onUpdateDay={updDay} di={dayIdx}/>
+<AiChat days={days} onUpdateDay={updDay} di={dayIdx} footerVisible={cur>=0&&step&&!allDone}/>
 </div>
 );
 }
