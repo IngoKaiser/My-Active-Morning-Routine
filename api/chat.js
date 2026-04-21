@@ -1,3 +1,8 @@
+// Vercel Serverless Function timeout (Hobby: max 60s, Pro: max 300s)
+export const config = {
+  maxDuration: 60,
+};
+
 export default async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -29,7 +34,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
+        max_tokens: 8000,
         system: system || '',
         messages: messages || [],
       }),
