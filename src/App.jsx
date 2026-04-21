@@ -188,6 +188,7 @@ tl.forEach((s,i)=>{if(s.type==="section"){if(cS.items.length)secs.push(cS);cS={l
 if(cS.items.length)secs.push(cS);
 
 return(
+<>
 <div className="min-h-screen pb-28" style={{background:C.bg,color:C.text}}>
 <style>{`@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}`}</style>
 
@@ -353,7 +354,8 @@ return(
 </div>
 )}
 
-<AiChat days={days} onUpdateDay={updDay} di={dayIdx} footerVisible={cur>=0&&step&&!allDone}/>
 </div>
+<AiChat days={days} onUpdateDay={updDay} di={dayIdx} footerVisible={cur>=0&&step&&!allDone}/>
+</>
 );
 }
