@@ -147,40 +147,53 @@ const send = async () => {
   setLd(false);
 };
 
-// Accept a proposal
+// Accept a single proposal
 const acceptProposal = (msgId, proposalIdx) => {
-  updateMsgs(prev => prev.map(m => {
-    if (m.id !== msgId || !m.proposals) return m;
-    const updated = [...m.proposals];
-    const p = updated[proposalIdx];
-    if (p.status !== "pending") return m;
-    onUpdateDay(p.dayIndex, p.changes);
-    updated[proposalIdx] = { ...p, status: "accepted" };
-    return { ...m, proposals: updated };
-  }));
-};
-
-// Reject a proposal
-const rejectProposal = (msgId, proposalIdx) => {
-  updateMsgs(prev => prev.map(m => {
-    if (m.id !== msgId || !m.proposals) return m;
-    const updated = [...m.proposals];
-    updated[proposalIdx] = { ...updated[proposalIdx], status: "rejected" };
-    return { ...m, proposals: updated };
-  }));
-};
-
-// Accept all pending proposals in a message
-const acceptAll = (msgId) => {
-  updateMsgs(prev => prev.map(m => {
-    if (m.id !== msgId || !m.proposals) return m;
-    const updated = m.proposals.map(p => {
-      if (p.status !== "pending") return p;
+  setMsgs(prev => {
+    const next = prev.map(m => {
+      if (m.id !== msgId || !m.proposals) return m;
+      const p = m.proposals[proposalIdx];
+      if (!p || p.status !== "pending") return m; // already handled
       onUpdateDay(p.dayIndex, p.changes);
-      return { ...p, status: "accepted" };
+      const updated = m.proposals.map((pr,j) => j === proposalIdx ? {...pr, status:"accepted"} : pr);
+      return {...m, proposals: updated};
     });
-    return { ...m, proposals: updated };
-  }));
+    saveChat(next);
+    return next;
+  });
+};
+
+// Reject a single proposal
+const rejectProposal = (msgId, proposalIdx) => {
+  setMsgs(prev => {
+    const next = prev.map(m => {
+      if (m.id !== msgId || !m.proposals) return m;
+      const p = m.proposals[proposalIdx];
+      if (!p || p.status !== "pending") return m;
+      // Do NOT call onUpdateDay — just mark as rejected
+      const updated = m.proposals.map((pr,j) => j === proposalIdx ? {...pr, status:"rejected"} : pr);
+      return {...m, proposals: updated};
+    });
+    saveChat(next);
+    return next;
+  });
+};
+
+// Accept all still-pending proposals in a message
+const acceptAll = (msgId) => {
+  setMsgs(prev => {
+    const next = prev.map(m => {
+      if (m.id !== msgId || !m.proposals) return m;
+      const updated = m.proposals.map(p => {
+        if (p.status !== "pending") return p; // skip already accepted/rejected
+        onUpdateDay(p.dayIndex, p.changes);
+        return {...p, status:"accepted"};
+      });
+      return {...m, proposals: updated};
+    });
+    saveChat(next);
+    return next;
+  });
 };
 
 const clearChat = () => { updateMsgs([initMsg]); };
@@ -280,15 +293,15 @@ return(
 
 {/* Input */}
 <div style={{padding:"8px 16px 12px",paddingBottom:"max(12px, env(safe-area-inset-bottom))"}}>
-  <div style={{display:"flex",alignItems:"flex-end",gap:8,borderRadius:12,border:`1px solid ${C.border}`,background:C.card,padding:"8px 12px"}}>
+  <div style={{display:"flex",alignItems:"center",gap:8,borderRadius:12,border:`1px solid ${C.border}`,background:C.card,padding:"6px 10px",minHeight:40}}>
     <textarea ref={iRef} value={inp}
       onChange={e=>{setInp(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,100)+"px";}}
       onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
       placeholder="Plan anpassen..."
       rows={1} disabled={ld}
-      style={{flex:1,border:"none",outline:"none",resize:"none",background:"transparent",color:C.text,fontSize:16,lineHeight:"1.3",padding:0,maxHeight:100,fontFamily:"inherit"}}/>
+      style={{flex:1,border:"none",outline:"none",resize:"none",background:"transparent",color:C.text,fontSize:16,lineHeight:"24px",padding:"2px 0",margin:0,maxHeight:100,fontFamily:"inherit",display:"block"}}/>
     <button onClick={send} disabled={!inp.trim()||ld}
-      style={{width:32,height:32,borderRadius:8,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,background:inp.trim()&&!ld?C.accent:"#d6d3d1",color:"#fff",transition:"background 0.2s"}}>
+      style={{width:30,height:30,borderRadius:8,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,background:inp.trim()&&!ld?C.accent:"#d6d3d1",color:"#fff",transition:"background 0.2s"}}>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </button>
   </div>
