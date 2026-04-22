@@ -75,21 +75,228 @@ Detail-Formate: "30 Sek." | "3×40 Sek." | "30 Sek./Seite" | "3×25 Sek./Seite" 
 5 Tage (Index 0-4): MO, DI, MI, DO, FR. Gib nur geänderte Felder in changes zurück.
 Wenn der Nutzer den Plan sehen will, beschreibe ihn kurz ohne JSON.
 
-WICHTIG bei großen Änderungen (z.B. kompletter Wochenplan-Umbau):
-- Ändere maximal 2 Tage pro Antwort
-- Nutze mehrere JSON-Blöcke (einen pro Tag)
-- Sage dem Nutzer, dass er für die restlichen Tage nochmal nachfragen soll`;
+WICHTIG: Wenn die Anfrage ALLE 5 Tage betrifft, erstelle JSON-Blöcke für ALLE 5 Tage in einer Antwort. Das ist möglich und erwünscht.
+Erstelle immer alle nötigen JSON-Blöcke auf einmal — der Nutzer soll nicht nachfragen müssen.`;
+
+const CHAT_STORAGE_KEY = "mam-chat-history";
+function loadChat() { try { const s = localStorage.getItem(CHAT_STORAGE_KEY); if (s) return JSON.parse(s); } catch(e) {} return null; }
+function saveChat(msgs) { try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs)); } catch(e) {} }
+
+const DL = ["Mo","Di","Mi","Do","Fr"];
+
 function AiChat({days,onUpdateDay,di,footerVisible}){
-const [open,setOpen]=useState(false),[msgs,setMsgs]=useState([{role:"assistant",content:"Ich kann deinen Trainingsplan anpassen. Sag mir z.B.:\n\n\u2022 Übungen tauschen oder entfernen\n\u2022 Sätze, Zeiten oder Pausen ändern\n\u2022 Fokus auf bestimmte Muskelgruppen\n\u2022 Training kürzer oder länger machen\n\u2022 Leichtere oder schwerere Varianten"}]),[inp,setInp]=useState(""),[ld,setLd]=useState(false);
-const end=useRef(null),iRef=useRef(null);
-useEffect(()=>{end.current?.scrollIntoView({behavior:"smooth"});},[msgs,ld]);
-const ctx=()=>{const L=["MO","DI","MI","DO","FR"];return days.map((d,i)=>{const s=[];["warmup","main","core","extra","cooldown"].forEach(k=>{if(d[k]?.length)s.push(`${k}:${d[k].map(e=>`${e.name}(${e.detail})`).join(",")}`);});return`${L[i]}-${d.title}\n${s.join("\n")}`;}).join("\n\n");};
-const send=async()=>{const t=inp.trim();if(!t||ld)return;setInp("");setMsgs(p=>[...p,{role:"user",content:t}]);setLd(true);try{const c=`PLAN:\n${ctx()}\nTag:${["MO","DI","MI","DO","FR"][di]}(${di})\nAnfrage:${t}`;const h=msgs.slice(1).filter(m=>m.role==="user"||m.role==="assistant");while(h.length&&h[0].role!=="user")h.shift();const tr=[...h.slice(-8),{role:"user",content:c}];const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system:SYS,messages:tr})});if(!r.ok)throw new Error();const d=await r.json();const txt=d.content?.map(b=>b.type==="text"?b.text:"").join("")||"Fehler.";const jm=txt.match(/```json\s*([\s\S]*?)\s*```/g);let dt=txt.replace(/```json[\s\S]*?```/g,"").trim();if(jm){let applied=[];for(const block of jm){const raw=block.replace(/```json\s*/,"").replace(/\s*```/,"");try{const p=JSON.parse(raw);if(p.action==="update_day"&&typeof p.dayIndex==="number"&&p.changes){onUpdateDay(p.dayIndex,p.changes);applied.push(["Mo","Di","Mi","Do","Fr"][p.dayIndex]);}}catch(e){}}if(applied.length)dt+=`\n\nAnpassung für ${applied.join(", ")} übernommen.`;}setMsgs(p=>[...p,{role:"assistant",content:dt}]);}catch(e){console.error("Chat error:",e);setMsgs(p=>[...p,{role:"assistant",content:`Fehler: ${e.message || "Verbindungsproblem"}. Versuche es mit einer kleineren Anfrage (z.B. nur einen Tag ändern).`}]);}setLd(false);};
-if(!open)return(<button onClick={()=>{setOpen(true);setTimeout(()=>iRef.current?.focus(),300);}} style={{position:"fixed",bottom:footerVisible?"max(76px,calc(72px + env(safe-area-inset-bottom)))":"max(24px,calc(16px + env(safe-area-inset-bottom)))",right:16,width:48,height:48,borderRadius:"50%",background:C.text,color:"#fff",zIndex:9999,boxShadow:"0 4px 16px rgba(0,0,0,0.3)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",WebkitTapHighlightColor:"transparent"}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 9h8M8 13h4" opacity="0.5"/></svg></button>);
-return(<div className="fixed inset-0 z-50 flex flex-col" style={{background:"rgba(44,41,37,0.25)",backdropFilter:"blur(8px)"}}><style>{`@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}.csl{animation:su .25s ease-out}.mi{animation:fi .2s ease-out}`}</style><div className="flex-shrink-0 h-12" onClick={()=>setOpen(false)}/><div className="csl flex-1 flex flex-col rounded-t-2xl overflow-hidden" style={{background:C.bg,maxHeight:"calc(100vh-48px)"}}><div className="flex items-center justify-between px-5 py-3.5" style={{borderBottom:`1px solid ${C.border}`}}><div><div className="text-sm font-semibold" style={{color:C.text}}>Plan-Assistent</div><div className="text-xs" style={{color:C.muted}}>Trainingsplan anpassen</div></div><button onClick={()=>setOpen(false)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100" style={{color:C.muted}}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
-<div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">{msgs.map((m,i)=>(<div key={i} className={`mi flex ${m.role==="user"?"justify-end":"justify-start"}`}><div className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap" style={{background:m.role==="user"?C.accent:C.card,color:m.role==="user"?"#fff":C.text,border:m.role!=="user"?`1px solid ${C.border}`:undefined,borderBottomRightRadius:m.role==="user"?6:undefined,borderBottomLeftRadius:m.role!=="user"?6:undefined}}>{m.content}</div></div>))}{ld&&<div className="mi flex justify-start"><div className="rounded-2xl px-4 py-3 flex gap-1.5 items-center" style={{background:C.card,border:`1px solid ${C.border}`,borderBottomLeftRadius:6}}>{[0,1,2].map(j=><span key={j} className="w-1.5 h-1.5 rounded-full" style={{background:C.border,animation:`pulse 1.2s ease-in-out ${j*0.15}s infinite`}}/>)}</div></div>}<div ref={end}/></div>
-<div className="px-4 pb-2 flex gap-2 overflow-x-auto" style={{scrollbarWidth:"none"}}>{[`${["Mo","Di","Mi","Do","Fr"][di]} kürzer`,"Übung tauschen","Mehr Schultern","Plan zeigen"].map((q,j)=>(<button key={j} onClick={()=>setInp(q)} className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors" style={{borderColor:C.border,color:C.sub}}>{q}</button>))}</div>
-<div className="px-4 pt-2 pb-3" style={{paddingBottom:"max(12px,env(safe-area-inset-bottom))"}}><div className="flex items-end gap-2 rounded-xl border px-3 py-2 transition-colors" style={{background:C.card,borderColor:C.border}}><textarea ref={iRef} value={inp} onChange={e=>{setInp(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px";}} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} placeholder="Plan anpassen..." rows={1} className="flex-1 bg-transparent outline-none placeholder-gray-300 resize-none" style={{color:C.text,fontSize:16,lineHeight:"1.4",maxHeight:120}} disabled={ld}/><button onClick={send} disabled={!inp.trim()||ld} className="w-7 h-7 rounded-lg flex items-center justify-center text-white flex-shrink-0 transition-all mb-0.5" style={{background:inp.trim()&&!ld?C.accent:"#d6d3d1"}}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button></div></div></div></div>);
+const initMsg = {role:"assistant",content:"Ich kann deinen Trainingsplan anpassen:\n\n\u2022 Übungen tauschen oder entfernen\n\u2022 Sätze, Zeiten oder Pausen ändern\n\u2022 Fokus auf bestimmte Muskelgruppen\n\u2022 Training kürzer oder länger machen\n\u2022 Kompletten Wochenplan umbauen",id:"init"};
+const [open,setOpen]=useState(false);
+const [msgs,setMsgs]=useState(()=>loadChat()||[initMsg]);
+const [inp,setInp]=useState("");
+const [ld,setLd]=useState(false);
+const endRef=useRef(null),iRef=useRef(null);
+
+// Persist chat
+const updateMsgs = (fn) => { setMsgs(prev => { const next = typeof fn === "function" ? fn(prev) : fn; saveChat(next); return next; }); };
+
+useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs,ld]);
+
+const ctx=()=>{return days.map((d,i)=>{const s=[];["warmup","main","core","extra","cooldown"].forEach(k=>{if(d[k]?.length)s.push(`${k}:${d[k].map(e=>`${e.name}(${e.detail})`).join(",")}`);});return`${DL[i]}-${d.title}\n${s.join("\n")}`;}).join("\n\n");};
+
+// Parse JSON blocks from AI response, return {text, proposals[]}
+const parseResponse = (txt) => {
+  const blocks = txt.match(/```json\s*([\s\S]*?)\s*```/g) || [];
+  const clean = txt.replace(/```json[\s\S]*?```/g,"").trim();
+  const proposals = [];
+  for (const block of blocks) {
+    const raw = block.replace(/```json\s*/,"").replace(/\s*```/,"");
+    try {
+      const p = JSON.parse(raw);
+      if (p.action==="update_day" && typeof p.dayIndex==="number" && p.changes) {
+        proposals.push({ dayIndex: p.dayIndex, dayLabel: DL[p.dayIndex]||"?", changes: p.changes, status: "pending" });
+      }
+    } catch(e) {}
+  }
+  return { text: clean, proposals };
+};
+
+const send = async () => {
+  const t = inp.trim(); if (!t || ld) return;
+  setInp(""); if(iRef.current) iRef.current.style.height = "auto";
+  const userMsg = { role:"user", content:t, id: Date.now()+"u" };
+  updateMsgs(p => [...p, userMsg]);
+  setLd(true);
+
+  try {
+    const c = `AKTUELLER PLAN:\n${ctx()}\n\nAusgewählter Tag: ${DL[di]} (Index ${di})\n\nAnfrage: ${t}`;
+    // Build API history (skip init, only user/assistant text)
+    const hist = msgs.filter(m => m.role === "user" || m.role === "assistant").slice(-8).map(m => ({role:m.role, content: m.content}));
+    const apiMsgs = [...hist, {role:"user", content:c}];
+
+    const r = await fetch("/api/chat", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({system:SYS, messages:apiMsgs})
+    });
+    if (!r.ok) { const err = await r.text(); throw new Error(`API ${r.status}: ${err.slice(0,100)}`); }
+    const d = await r.json();
+    const fullText = d.content?.map(b => b.type==="text" ? b.text : "").join("") || "Keine Antwort erhalten.";
+
+    const { text, proposals } = parseResponse(fullText);
+    const aiMsg = { role:"assistant", content: text, id: Date.now()+"a", proposals: proposals.length ? proposals : undefined };
+    updateMsgs(p => [...p, aiMsg]);
+  } catch(e) {
+    console.error("Chat error:", e);
+    updateMsgs(p => [...p, { role:"assistant", content:`Fehler: ${e.message || "Verbindungsproblem"}.`, id:Date.now()+"e" }]);
+  }
+  setLd(false);
+};
+
+// Accept a proposal
+const acceptProposal = (msgId, proposalIdx) => {
+  updateMsgs(prev => prev.map(m => {
+    if (m.id !== msgId || !m.proposals) return m;
+    const updated = [...m.proposals];
+    const p = updated[proposalIdx];
+    if (p.status !== "pending") return m;
+    onUpdateDay(p.dayIndex, p.changes);
+    updated[proposalIdx] = { ...p, status: "accepted" };
+    return { ...m, proposals: updated };
+  }));
+};
+
+// Reject a proposal
+const rejectProposal = (msgId, proposalIdx) => {
+  updateMsgs(prev => prev.map(m => {
+    if (m.id !== msgId || !m.proposals) return m;
+    const updated = [...m.proposals];
+    updated[proposalIdx] = { ...updated[proposalIdx], status: "rejected" };
+    return { ...m, proposals: updated };
+  }));
+};
+
+// Accept all pending proposals in a message
+const acceptAll = (msgId) => {
+  updateMsgs(prev => prev.map(m => {
+    if (m.id !== msgId || !m.proposals) return m;
+    const updated = m.proposals.map(p => {
+      if (p.status !== "pending") return p;
+      onUpdateDay(p.dayIndex, p.changes);
+      return { ...p, status: "accepted" };
+    });
+    return { ...m, proposals: updated };
+  }));
+};
+
+const clearChat = () => { updateMsgs([initMsg]); };
+
+// ═══ CLOSED STATE: floating button ═══
+if(!open) return(
+  <button onClick={()=>{setOpen(true);setTimeout(()=>iRef.current?.focus(),300);}}
+    style={{position:"fixed",bottom:footerVisible?"max(76px,calc(72px + env(safe-area-inset-bottom)))":"max(24px,calc(16px + env(safe-area-inset-bottom)))",right:16,width:48,height:48,borderRadius:"50%",background:C.text,color:"#fff",zIndex:9999,boxShadow:"0 4px 16px rgba(0,0,0,0.3)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",WebkitTapHighlightColor:"transparent"}}>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 9h8M8 13h4" opacity="0.5"/></svg>
+  </button>
+);
+
+// ═══ OPEN STATE ═══
+return(
+<div style={{position:"fixed",inset:0,zIndex:9998,display:"flex",flexDirection:"column",background:"rgba(44,41,37,0.25)",backdropFilter:"blur(8px)"}}>
+<style>{`@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}.csl{animation:su .25s ease-out}.mi{animation:fi .2s ease-out}`}</style>
+<div style={{flexShrink:0,height:48}} onClick={()=>setOpen(false)}/>
+<div className="csl" style={{flex:1,display:"flex",flexDirection:"column",borderRadius:"16px 16px 0 0",overflow:"hidden",background:C.bg,maxHeight:"calc(100vh - 48px)"}}>
+
+{/* Header */}
+<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 20px",borderBottom:`1px solid ${C.border}`}}>
+  <div>
+    <div style={{fontSize:14,fontWeight:600,color:C.text}}>Plan-Assistent</div>
+    <div style={{fontSize:11,color:C.muted}}>Trainingsplan anpassen</div>
+  </div>
+  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+    {msgs.length > 1 && <button onClick={clearChat} style={{fontSize:11,color:C.muted,background:"none",border:"none",cursor:"pointer",padding:"4px 8px"}}>Chat leeren</button>}
+    <button onClick={()=>setOpen(false)} style={{width:28,height:28,borderRadius:"50%",border:"none",background:"transparent",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:C.muted}}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+</div>
+
+{/* Messages */}
+<div style={{flex:1,overflowY:"auto",padding:"16px 16px",display:"flex",flexDirection:"column",gap:8}}>
+{msgs.map((m,i)=>(
+<div key={m.id||i} className="mi" style={{display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start",gap:6}}>
+  {/* Message bubble */}
+  <div style={{maxWidth:"85%",borderRadius:16,padding:"10px 14px",fontSize:14,lineHeight:1.5,whiteSpace:"pre-wrap",
+    background:m.role==="user"?C.accent:C.card,color:m.role==="user"?"#fff":C.text,
+    border:m.role!=="user"?`1px solid ${C.border}`:undefined,
+    borderBottomRightRadius:m.role==="user"?6:16,borderBottomLeftRadius:m.role!=="user"?6:16}}>
+    {m.content}
+  </div>
+
+  {/* Proposal cards */}
+  {m.proposals?.map((p,pi) => (
+    <div key={pi} style={{maxWidth:"85%",borderRadius:12,padding:"10px 14px",fontSize:13,
+      background:p.status==="accepted"?C.doneBg:p.status==="rejected"?"#fafafa":C.accentSoft,
+      border:`1px solid ${p.status==="accepted"?C.done:p.status==="rejected"?"#e0e0e0":C.accent}30`}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+        {p.status==="accepted" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.done} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>}
+        {p.status==="rejected" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>}
+        <span style={{fontWeight:600,color:p.status==="accepted"?C.done:p.status==="rejected"?C.muted:C.text}}>
+          {p.dayLabel}: {p.changes.title || "Anpassung"}
+        </span>
+      </div>
+      {/* Show exercise summary */}
+      <div style={{fontSize:12,color:C.muted,marginBottom:p.status==="pending"?8:0}}>
+        {["warmup","main","core","extra","cooldown"].map(k => p.changes[k]?.length ? `${k}: ${p.changes[k].map(e=>e.name).join(", ")}` : null).filter(Boolean).join(" · ")}
+        {p.changes.pauseEx && ` · Pause: ${p.changes.pauseEx}s`}
+      </div>
+      {/* Action buttons — only for pending */}
+      {p.status==="pending" && (
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={()=>acceptProposal(m.id,pi)} style={{padding:"5px 14px",borderRadius:8,border:"none",background:C.accent,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer"}}>
+            Übernehmen
+          </button>
+          <button onClick={()=>rejectProposal(m.id,pi)} style={{padding:"5px 14px",borderRadius:8,border:`1px solid ${C.border}`,background:C.card,color:C.muted,fontSize:12,cursor:"pointer"}}>
+            Verwerfen
+          </button>
+        </div>
+      )}
+      {p.status==="accepted" && <span style={{fontSize:11,color:C.done}}>Übernommen</span>}
+      {p.status==="rejected" && <span style={{fontSize:11,color:C.muted}}>Verworfen</span>}
+    </div>
+  ))}
+
+  {/* Accept all button when multiple pending proposals */}
+  {m.proposals && m.proposals.filter(p=>p.status==="pending").length > 1 && (
+    <button onClick={()=>acceptAll(m.id)} style={{padding:"6px 16px",borderRadius:8,border:"none",background:C.text,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",alignSelf:"flex-start"}}>
+      Alle übernehmen
+    </button>
+  )}
+</div>
+))}
+{ld && <div className="mi" style={{display:"flex",justifyContent:"flex-start"}}><div style={{borderRadius:16,padding:"12px 16px",display:"flex",gap:6,alignItems:"center",background:C.card,border:`1px solid ${C.border}`,borderBottomLeftRadius:6}}>{[0,1,2].map(j=><span key={j} style={{width:6,height:6,borderRadius:"50%",background:C.border,animation:`pulse 1.2s ease-in-out ${j*0.15}s infinite`}}/>)}</div></div>}
+<div ref={endRef}/>
+</div>
+
+{/* Quick actions */}
+<div style={{padding:"0 16px 8px",display:"flex",gap:8,overflowX:"auto",scrollbarWidth:"none"}}>
+  {[`${DL[di]} kürzer`,"Übung tauschen","Mehr Schultern","Plan zeigen"].map((q,j)=>(
+    <button key={j} onClick={()=>setInp(q)} style={{flexShrink:0,padding:"6px 12px",borderRadius:20,fontSize:12,fontWeight:500,border:`1px solid ${C.border}`,background:"transparent",color:C.sub,cursor:"pointer",whiteSpace:"nowrap"}}>{q}</button>
+  ))}
+</div>
+
+{/* Input */}
+<div style={{padding:"8px 16px 12px",paddingBottom:"max(12px, env(safe-area-inset-bottom))"}}>
+  <div style={{display:"flex",alignItems:"flex-end",gap:8,borderRadius:12,border:`1px solid ${C.border}`,background:C.card,padding:"8px 12px"}}>
+    <textarea ref={iRef} value={inp}
+      onChange={e=>{setInp(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,100)+"px";}}
+      onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
+      placeholder="Plan anpassen..."
+      rows={1} disabled={ld}
+      style={{flex:1,border:"none",outline:"none",resize:"none",background:"transparent",color:C.text,fontSize:16,lineHeight:"1.3",padding:0,maxHeight:100,fontFamily:"inherit"}}/>
+    <button onClick={send} disabled={!inp.trim()||ld}
+      style={{width:32,height:32,borderRadius:8,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,background:inp.trim()&&!ld?C.accent:"#d6d3d1",color:"#fff",transition:"background 0.2s"}}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+</div>
+
+</div>
+</div>
+);
 }
 
 /* ═══ PERSISTENCE ═══ */
@@ -263,7 +470,29 @@ return(
     }
 
     /* EXERCISE CARD */
-    const totalPh=s.totalPhases,exPct=active&&!isDone?(phase*100/totalPh+(inSP?0:((s.secPerPhase-rem)/s.secPerPhase)*100/totalPh)):isDone?100:0;
+    const totalPh=s.totalPhases;
+    const numSetPauses = s.totalSets - 1;
+    const totalExSec = totalPh * s.secPerPhase + numSetPauses * s.setPause;
+    let exPct = isDone ? 100 : 0;
+    if (active && !isDone && totalExSec > 0) {
+      /*
+       * With deferred phase increment:
+       * - During exercise: phase = current (0-indexed), exercise is in progress
+       *   → completed phases = phase, current exercise progress = secPerPhase - rem
+       * - During set pause (inSP): phase = same as before pause, exercise is DONE
+       *   → completed phases = phase + 1, current pause progress = setPause - rem
+       */
+      let elapsed;
+      if (inSP) {
+        const donePhases = phase + 1;
+        const donePauses = Math.min(phase, numSetPauses); // pauses before this one
+        elapsed = donePhases * s.secPerPhase + donePauses * s.setPause + (s.setPause - rem);
+      } else {
+        const donePauses = Math.min(phase, numSetPauses); // phase 0 = 0 pauses before, phase 1 = 1 pause before
+        elapsed = phase * s.secPerPhase + donePauses * s.setPause + (s.secPerPhase - rem);
+      }
+      exPct = Math.min(100, (elapsed / totalExSec) * 100);
+    }
 
     return(<div key={i} ref={active?sRef:null}
       onClick={()=>{if(!active&&!isDone&&!running)setExp(exp===i?-1:i);}}
