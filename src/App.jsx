@@ -26,6 +26,7 @@ const C={
   doneBg:"#EFF5F0",
   ring:"#E16A3D",
 };
+const R = 12; // unified border radius
 
 /* ═══ EXERCISE DATA ═══ */
 const DEFAULT_DAYS=[
@@ -47,6 +48,55 @@ function useBeep(){const c=useRef(null);return useCallback((f=880,d=0.12)=>{try{
 /* ═══ RING ═══ */
 function Ring({pct,size=38,sw=2.5,children}){const r=(size-sw*2)/2,ci=2*Math.PI*r,d=ci-(pct/100)*ci;return(<div className="relative flex-shrink-0" style={{width:size,height:size}}><svg width={size} height={size} style={{transform:"rotate(-90deg)"}}><circle cx={size/2} cy={size/2} r={r} fill="none" stroke={C.border} strokeWidth={sw}/><circle cx={size/2} cy={size/2} r={r} fill="none" stroke={C.ring} strokeWidth={sw} strokeLinecap="round" strokeDasharray={ci} strokeDashoffset={d} style={{transition:"stroke-dashoffset 0.35s ease"}}/></svg><div className="absolute inset-0 flex items-center justify-center">{children}</div></div>);}
 
+/* ═══ EXERCISE VIDEOS — Leap Fitness "How to Do" + fallbacks ═══ */
+const VIDEO_MAP={
+  "Knie-Liegestütze":"jWxvty2KROs","Liegestütze":"R08gYyypGto","Breite Liegestütze":"pQUsUHvyoI0",
+  "Pike Push-ups":"R08gYyypGto","Stuhl-Dips":"HCf97NPYeGY","Plank":"ASdvN_XEl_c",
+  "Hollow Body Hold":"44ScXWFaVBs","Superman Hold":"z6PJMT2y8GQ","Bicycle Crunches":"9FGilxCbdz8",
+  "Kniebeugen":"aclHkVaku9U","Reverse Lunges":"xrPteyQLGAo","Glute Bridges":"OUgsJ8-Vi0E",
+  "Wadenheben":"gwLzBJYoWlI","Cat-Cow":"kqnua4rHVVA","Dead Bugs":"4XLEnwUr1d8","Dead Bug":"4XLEnwUr1d8",
+  "Side Plank":"K2VljzCC16g","Birddog":"wiFNA3sqjCA","Squat to Stand":"aclHkVaku9U",
+  "World's Greatest Stretch":"IikScp_osZc","Schulter-CARs":"PJ4M8MrecxE","Hüft-CARs":"MJqSdxEodgg",
+  "Kobra-Stretch":"JDcdhTuycOI","Cobra-Stretch":"JDcdhTuycOI","Kindshaltung":"2MqNj-oMJCo",
+  "Tauben-Stretch":"UKwEMTEcxKU","Tauben-Pose":"UKwEMTEcxKU","Tisch-Rudern":"OYUxXMGVuuU",
+  "Glute Bridge Marsch":"OUgsJ8-Vi0E","Plank Knee Taps":"ASdvN_XEl_c","Brücke vom Boden":"OUgsJ8-Vi0E",
+  "Side Plank (Mobility)":"K2VljzCC16g","Dead Bug (langsam)":"4XLEnwUr1d8",
+};
+function getVideoId(name){if(VIDEO_MAP[name])return VIDEO_MAP[name];const k=Object.keys(VIDEO_MAP).find(k=>name.toLowerCase().includes(k.toLowerCase()));return k?VIDEO_MAP[k]:null;}
+
+/* Exercise video: autoplay muted loop when active, tap to unmute/fullscreen */
+function ExerciseVideo({exerciseName,ytSearch,autoplay}){
+  const vid=getVideoId(exerciseName);
+  if(!vid){
+    const url=`https://www.youtube.com/results?search_query=${encodeURIComponent((ytSearch||exerciseName).replace(/\+/g," "))}`;
+    return(<a href={url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()}
+      style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:12,color:C.muted,textDecoration:"none",padding:"4px 0"}}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#c4302b"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2 31.5 31.5 0 000 12a31.5 31.5 0 00.5 5.8 3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1c.4-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
+      Video-Anleitung suchen</a>);
+  }
+  // autoplay: muted loop embed; otherwise thumbnail with play button
+  const embedUrl=`https://www.youtube.com/embed/${vid}?${autoplay?"autoplay=1&mute=1&loop=1&playlist="+vid+"&":""}rel=0&modestbranding=1&playsinline=1&controls=${autoplay?0:1}`;
+  const [playing,setPlaying]=useState(autoplay);
+  return(
+    <div onClick={e=>e.stopPropagation()} style={{borderRadius:R-2,overflow:"hidden",background:"#000",position:"relative",aspectRatio:"16/9"}}>
+      {(playing||autoplay)?(
+        <iframe src={embedUrl} style={{width:"100%",height:"100%",border:"none",pointerEvents:autoplay?"none":"auto"}}
+          allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen/>
+      ):(
+        <>
+          <img src={`https://img.youtube.com/vi/${vid}/hqdefault.jpg`} alt={exerciseName}
+            style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}
+            onError={e=>{e.target.src=`https://img.youtube.com/vi/${vid}/mqdefault.jpg`;}}/>
+          <div onClick={()=>setPlaying(true)} style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",background:"rgba(0,0,0,0.12)"}}>
+            <div style={{width:52,height:36,borderRadius:8,background:"rgba(204,0,0,0.9)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.3)"}}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 /* ═══ AI CHAT ═══ */
 const SYS=`Du bist ein Trainingsplan-Assistent für eine Bodyweight/Calisthenics Morning-Routine App.
 
@@ -321,7 +371,6 @@ function savePlan(d){try{localStorage.setItem(SK,JSON.stringify(d));}catch(e){}}
 export default function App(){
 const [days,setDays]=useState(()=>loadPlan()||JSON.parse(JSON.stringify(DEFAULT_DAYS)));
 const [dayIdx,setDayIdx]=useState(()=>({1:0,2:1,3:2,4:3,5:4})[new Date().getDay()]??0);
-const [mode,setMode]=useState("manual");
 const [cur,setCur]=useState(-1);
 const [phase,setPhase]=useState(0);
 const [rem,setRem]=useState(0);
@@ -347,12 +396,7 @@ const updDay=useCallback((i,ch)=>{setDays(p=>{const n=JSON.parse(JSON.stringify(
 
 useEffect(()=>{clearInterval(tick.current);setCur(-1);setPhase(0);setRem(0);setRunning(false);setDone(new Set());setInSP(false);setExp(-1);},[dayIdx]);
 useEffect(()=>{if(cur<0||cur>=tl.length)return;const s=tl[cur];setPhase(0);setInSP(false);setRem(s.type==="exercise"?s.secPerPhase:s.seconds);setExp(cur);
-// Auto-start logic: in auto mode always start; in manual mode only start pauses/sections (not exercises)
-if(pAdv.current){
-  if(mode==="auto") setRunning(true);
-  else if(s.type==="pause"||s.type==="section") setRunning(true);
-  else setRunning(false); // manual + exercise = just expand, don't start
-} else setRunning(false);
+if(pAdv.current) setRunning(true); else setRunning(false);
 pAdv.current=false;},[cur]);
 
 useEffect(()=>{
@@ -402,9 +446,10 @@ return()=>clearInterval(tick.current);
 
 useEffect(()=>{sRef.current?.scrollIntoView({behavior:"smooth",block:"center"});},[cur]);
 
-const startAt=i=>{clearInterval(tick.current);pAdv.current=false;setCur(i);setTimeout(()=>setRunning(true),80);};
 const toggle=()=>{if(rem<=0&&step?.type==="exercise"){setRem(step.secPerPhase);setRunning(true);return;}setRunning(!running);};
 const skip=()=>{clearInterval(tick.current);setDone(p=>{const n=new Set(p);n.add(cur);return n;});setInSP(false);if(cur<tl.length-1){pAdv.current=true;setCur(c=>c+1);}else setRunning(false);};
+const prev=()=>{if(cur<=0)return;clearInterval(tick.current);setInSP(false);setRunning(false);let t=cur-1;while(t>0&&tl[t].type!=="exercise")t--;setDone(p=>{const n=new Set(p);n.delete(cur);n.delete(t);return n;});pAdv.current=false;setCur(t);};
+const restart=()=>{clearInterval(tick.current);setPhase(0);setInSP(false);if(step?.type==="exercise")setRem(step.secPerPhase);else setRem(step?.seconds||0);setRunning(false);};
 const startW=()=>{pAdv.current=true;setCur(0);};
 const resetW=()=>{clearInterval(tick.current);setCur(-1);setPhase(0);setRem(0);setRunning(false);setDone(new Set());setInSP(false);setExp(-1);pAdv.current=false;};
 
@@ -426,9 +471,6 @@ return(
       <p className="text-sm font-bold mt-0.5">{day.title} <span className="font-normal" style={{color:C.muted}}>{Math.round(totSec/60)} min</span></p>
     </div>
     <div className="flex items-center gap-2">
-      <button onClick={()=>{setMode(m=>m==="manual"?"auto":"manual");resetW();}} className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all" style={{background:mode==="auto"?C.text:C.card,color:mode==="auto"?"#fff":C.sub,border:`1px solid ${mode==="auto"?"transparent":C.border}`}}>
-        {mode==="auto"?"Auto":"Manuell"}
-      </button>
       <span className="text-sm font-bold tabular-nums" style={{color:C.text}}>{Math.round(pct)}%</span>
     </div>
   </div>
@@ -443,7 +485,7 @@ return(
 
 <div className="max-w-lg mx-auto px-5 pt-5">
 
-{mode==="auto"&&cur<0&&!allDone&&(
+{cur<0&&!allDone&&(
   <button onClick={startW} className="w-full py-3.5 rounded-xl text-white font-semibold text-sm mb-6 active:scale-[0.98] transition-all" style={{background:C.accent}}>Workout starten</button>
 )}
 
@@ -544,30 +586,17 @@ return(
             {active&&inSP&&<span className="text-xs font-medium" style={{color:C.accent}}>Satzpause {fmt(rem)}</span>}
           </div>
         </div>
-        {/* Video icon — always visible when expanded, positioned inline */}
-        {isExp&&!isDone&&s.yt&&(
-          <a href={ytUrl(s.yt)} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()}
-            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors hover:opacity-70" style={{background:C.accentSoft,color:"#c4302b"}}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2 31.5 31.5 0 000 12a31.5 31.5 0 00.5 5.8 3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1c.4-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
-          </a>
-        )}
         {/* Expand chevron when not expanded and not active */}
         {!isExp&&!isDone&&!active&&(
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2" strokeLinecap="round" className="flex-shrink-0"><path d="M6 9l6 6 6-6"/></svg>
         )}
       </div>
 
-      {/* Expanded: description + start button in manual */}
+      {/* Expanded: video + description */}
       {isExp&&!isDone&&(
-        <div className="px-3.5 pb-3">
-          <p className="text-xs leading-snug" style={{color:C.muted}}>{s.desc}</p>
-          {/* START button in manual mode — only when not already active/running */}
-          {mode==="manual"&&!active&&(
-            <button onClick={e=>{e.stopPropagation();startAt(i);}}
-              className="mt-2.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white active:scale-95 transition-all" style={{background:C.accent}}>
-              Start
-            </button>
-          )}
+        <div style={{padding:"0 14px 12px"}}>
+          {s.yt&&<ExerciseVideo exerciseName={s.name} ytSearch={s.yt} autoplay={active&&running}/>}
+          <p className="text-xs leading-snug" style={{color:C.muted,marginTop:8}}>{s.desc}</p>
         </div>
       )}
     </div>);
@@ -580,24 +609,38 @@ return(
 <button onClick={resetPlan} className="w-full py-2 rounded-lg text-xs mt-4 mb-6 transition-colors" style={{color:C.border}}>Plan auf Standard zurücksetzen</button>
 </div>
 
-{/* CONTROL FOOTER — visible whenever a step is active */}
+{/* ═══ COMPACT CONTROL BAR ═══ */}
 {cur>=0&&step&&!allDone&&(
-<div className="fixed bottom-0 left-0 right-0 z-40" style={{background:"rgba(250,249,247,0.96)",backdropFilter:"blur(20px)",borderTop:`1px solid ${C.border}`}}>
-<div className="max-w-lg mx-auto px-5 flex items-center gap-3" style={{paddingTop:10,paddingBottom:"max(10px,env(safe-area-inset-bottom))"}}>
-  <Ring pct={step.type==="exercise"?(inSP?100:(step.secPerPhase>0?((step.secPerPhase-rem)/step.secPerPhase)*100:0)):(step.seconds>0?((step.seconds-rem)/step.seconds)*100:0)} size={42} sw={3}>
-    <span className="text-xs font-bold tabular-nums" style={{color:C.text}}>{fmt(rem)}</span>
-  </Ring>
-  <div className="flex-1 min-w-0">
-    <div className="text-sm font-semibold truncate">{step.type==="pause"||step.type==="section"?"Pause":(inSP?"Satzpause":step.name)}{cSide&&!inSP?` · ${cSide==="L"?"Links":"Rechts"}`:""}</div>
-    <div className="text-xs tabular-nums" style={{color:C.muted}}>{step.type==="exercise"&&step.totalSets>1?`Satz ${cSet}/${step.totalSets}`:""}</div>
+<div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:40}}>
+  <div style={{maxWidth:480,margin:"0 auto",padding:"0 20px",paddingBottom:"max(16px, env(safe-area-inset-bottom))"}}>
+    <div style={{background:C.card,borderRadius:R,padding:"10px 12px",display:"flex",alignItems:"center",gap:8,boxShadow:`0 -1px 0 ${C.border}, 0 4px 24px rgba(44,41,37,0.12)`}}>
+      <Ring pct={step.type==="exercise"?(inSP?100:(step.secPerPhase>0?((step.secPerPhase-rem)/step.secPerPhase)*100:0)):(step.seconds>0?((step.seconds-rem)/step.seconds)*100:0)} size={40} sw={3}>
+        <span style={{fontSize:13,fontWeight:700,color:C.text,fontVariantNumeric:"tabular-nums"}}>{fmt(rem)}</span>
+      </Ring>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:13,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+          {step.type==="pause"||step.type==="section"?"Pause":(inSP?"Satzpause":step.name)}{cSide&&!inSP?` · ${cSide==="L"?"L":"R"}`:""}
+        </div>
+        {step.type==="exercise"&&step.totalSets>1&&(
+          <div style={{fontSize:10,color:C.muted,fontVariantNumeric:"tabular-nums",marginTop:1}}>Satz {cSet}/{step.totalSets}</div>
+        )}
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+        <button onClick={prev} disabled={cur<=0} style={{width:34,height:34,borderRadius:R,border:`1px solid ${C.border}`,background:C.card,cursor:cur>0?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",opacity:cur>0?1:0.25,color:C.sub}}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 20l-10-8 10-8V20zM5 20V4h2v16H5z"/></svg>
+        </button>
+        <button onClick={restart} style={{width:34,height:34,borderRadius:R,border:`1px solid ${C.border}`,background:C.card,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:C.sub}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        </button>
+        <button onClick={toggle} style={{width:42,height:42,borderRadius:R,border:"none",background:running?C.text:C.accent,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",transition:"background 0.15s"}}>
+          {running?(<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>):(<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>)}
+        </button>
+        <button onClick={skip} style={{width:34,height:34,borderRadius:R,border:`1px solid ${C.border}`,background:C.card,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:C.sub}}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8V4zM19 4v16h-2V4h2z"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
-  <button onClick={toggle} className="w-10 h-10 rounded-xl flex items-center justify-center text-white flex-shrink-0 active:scale-95 transition-all" style={{background:running?C.text:C.accent}}>
-    {running?(<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>):(<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>)}
-  </button>
-  <button onClick={skip} className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors" style={{background:C.card,border:`1px solid ${C.border}`,color:C.sub}}>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8V4zM19 4v16h-2V4h2z"/></svg>
-  </button>
-</div>
 </div>
 )}
 
