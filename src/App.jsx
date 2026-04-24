@@ -26,18 +26,25 @@ const C={
   doneBg:"#EFF5F0",
   ring:"#E16A3D",
 };
+const R = 12; // unified border radius
 
 /* ═══ EXERCISE DATA ═══ */
 const DEFAULT_DAYS=[
-{id:"mo",label:"Mo",title:"Oberkörper + Core",pauseEx:60,pauseCore:45,warmup:[{name:"Cat-Cow",detail:"60 Sek.",desc:"Vierfüßlerstand, fließend Buckel und Hohlkreuz.",yt:"cat+cow+übung+anleitung+deutsch"},{name:"World's Greatest Stretch",detail:"40 Sek./Seite",desc:"Ausfallschritt, Hand neben Fuß, Arm zur Decke.",yt:"worlds+greatest+stretch+anleitung"},{name:"Schulter-CARs",detail:"30 Sek./Arm",desc:"Arm in großem Kreis langsam rotieren.",yt:"shoulder+CARs+mobility+übung+anleitung"}],main:[{name:"Knie-Liegestütze",detail:"3×40 Sek.",desc:"Hände schulterbreit, Knie am Boden.",yt:"knie+liegestütze+anfänger+richtige+ausführung",tag:"Brust"},{name:"Tisch-Rudern",detail:"3×40 Sek.",desc:"Tischkante greifen, Brust zur Kante ziehen.",yt:"bodyweight+row+tisch+rudern+zuhause",tag:"Rücken"},{name:"Stuhl-Dips",detail:"3×35 Sek.",desc:"Stuhlkante, Arme beugen bis 90 Grad.",yt:"stuhl+dips+trizeps+übung+anleitung",tag:"Trizeps"},{name:"Pike Push-ups",detail:"3×30 Sek.",desc:"Hüfte hoch in V-Form, Kopf Richtung Boden.",yt:"pike+push+up+ausführung+deutsch+anleitung",tag:"Schultern"}],core:[{name:"Hollow Body Hold",detail:"3×30 Sek.",desc:"Rückenlage, Arme und Beine anheben.",yt:"hollow+body+hold+anleitung+anfänger+core",tag:"Bauch"},{name:"Superman Hold",detail:"3×30 Sek.",desc:"Bauchlage, alles anheben.",yt:"superman+übung+rücken+anleitung+bodyweight",tag:"Rücken"},{name:"Plank",detail:"3×30 Sek.",desc:"Unterarme, Körper gerade, Bauch fest.",yt:"plank+unterarmstütz+richtige+ausführung",tag:"Core"}],cooldown:[{name:"Brustdehnung Türrahmen",detail:"40 Sek./Seite",desc:"Unterarm am Rahmen, nach vorne lehnen.",yt:"brustdehnung+türrahmen+anleitung"},{name:"Kindshaltung",detail:"45 Sek.",desc:"Knie am Boden, Arme strecken.",yt:"childs+pose+yoga+anleitung+deutsch"},{name:"Kobra-Stretch",detail:"30 Sek.",desc:"Bauchlage, Arme strecken, Hüfte am Boden.",yt:"cobra+stretch+yoga+rücken+anleitung"}]},
-{id:"di",label:"Di",title:"Unterkörper + Core",pauseEx:45,pauseCore:30,warmup:[{name:"Cat-Cow",detail:"45 Sek.",desc:"Fließend Buckel und Hohlkreuz.",yt:"cat+cow+übung+anleitung+deutsch"},{name:"Hüft-CARs",detail:"30 Sek./Bein",desc:"Knie anheben, großer Kreis.",yt:"hip+CARs+mobility+übung+hüfte"},{name:"Tiefe Kniebeuge",detail:"45 Sek.",desc:"Fersen am Boden, Ellbogen gegen Knie.",yt:"deep+squat+hold+mobility+deutsch"}],main:[{name:"Kniebeugen",detail:"3×40 Sek.",desc:"Schulterbreit, tief, Rücken gerade.",yt:"bodyweight+kniebeugen+richtige+ausführung",tag:"Beine"},{name:"Reverse Lunges",detail:"3×30 Sek./Seite",desc:"Schritt nach hinten, Knie zum Boden.",yt:"reverse+lunges+anleitung+auf+der+stelle",tag:"Beine"},{name:"Glute Bridges",detail:"3×35 Sek.",desc:"Rückenlage, Hüfte hoch.",yt:"glute+bridge+anleitung+anfänger",tag:"Gesäß"},{name:"Wadenheben",detail:"3×30 Sek.",desc:"Treppenabsatz, voller Bewegungsumfang.",yt:"wadenheben+stehend+anleitung+bodyweight",tag:"Waden"}],core:[{name:"Dead Bugs",detail:"3×25 Sek./Seite",desc:"Arme senkrecht, gegengleich strecken.",yt:"dead+bug+übung+core+anleitung+deutsch",tag:"Bauch"},{name:"Side Plank",detail:"3×20 Sek./Seite",desc:"Unterarm stützen, seitlich gerade.",yt:"side+plank+seitstütz+anleitung+deutsch",tag:"Obliques"},{name:"Superman Hold",detail:"3×25 Sek.",desc:"Bauchlage, alles anheben.",yt:"superman+übung+rücken+anleitung+bodyweight",tag:"Rücken"}],cooldown:[{name:"Tauben-Stretch",detail:"30 Sek./Seite",desc:"Vorderbein angewinkelt.",yt:"pigeon+stretch+hüfte+dehnen+anleitung"},{name:"Oberschenkel-Dehnung",detail:"30 Sek./Bein",desc:"Fuß zum Gesäß ziehen.",yt:"quadrizeps+dehnung+stehend+anleitung"},{name:"Wadendehnung",detail:"25 Sek./Seite",desc:"Wand, Ferse in den Boden.",yt:"wadendehnung+wand+anleitung"}]},
-{id:"mi",label:"Mi",title:"Mobility",pauseEx:15,pauseCore:15,warmup:[{name:"Cat-Cow",detail:"60 Sek.",desc:"Bewusst langsam.",yt:"cat+cow+übung+anleitung+deutsch"},{name:"Schulter-CARs",detail:"45 Sek./Arm",desc:"Maximaler Radius.",yt:"shoulder+CARs+mobility+übung+anleitung"},{name:"Hüft-CARs",detail:"45 Sek./Bein",desc:"So groß wie möglich.",yt:"hip+CARs+mobility+übung+hüfte"}],main:[{name:"World's Greatest Stretch",detail:"60 Sek./Seite",desc:"Ausfallschritt, Arm zur Decke.",yt:"worlds+greatest+stretch+mobility+flow",tag:"Ganzkörper"},{name:"Tiefer Squat-Flow",detail:"2 Min.",desc:"Tiefe Hocke, sanft wippen.",yt:"deep+squat+hold+mobility+routine",tag:"Hüfte"},{name:"Tauben-Pose",detail:"60 Sek./Seite",desc:"Vorderbein angewinkelt.",yt:"pigeon+pose+yoga+anleitung+deutsch",tag:"Hüfte"},{name:"Brücke vom Boden",detail:"5×20 Sek.",desc:"Hüfte hoch, Brust öffnen.",yt:"glute+bridge+brücke+mobility",tag:"Wirbelsäule"},{name:"Thorakale Rotation",detail:"50 Sek./Seite",desc:"Vierfüßler, Ellbogen zur Decke.",yt:"thorakale+rotation+vierfüßler+mobilität",tag:"BWS"},{name:"Cobra-Stretch",detail:"5×20 Sek.",desc:"Bauchlage, Arme strecken.",yt:"cobra+stretch+yoga+rücken+deutsch",tag:"LWS"},{name:"Scorpion-Stretch",detail:"45 Sek./Seite",desc:"Bein über Körper.",yt:"scorpion+stretch+übung+mobility",tag:"BWS/Hüfte"}],core:[{name:"Side Plank",detail:"45 Sek./Seite",desc:"Seitlich, Hüfte hoch.",yt:"side+plank+seitstütz+anleitung+deutsch",tag:"Rumpf"},{name:"Dead Bug",detail:"40 Sek./Seite",desc:"Bewusst langsam.",yt:"dead+bug+übung+core+anleitung+deutsch",tag:"Core"}],cooldown:[{name:"Knie zur Brust",detail:"45 Sek./Seite",desc:"Rückenlage, sanft zur Brust.",yt:"knie+zur+brust+rückenlage+dehnung"},{name:"Wirbelsäulendrehung",detail:"50 Sek./Seite",desc:"Knie zur Seite.",yt:"liegende+wirbelsäulendrehung+yoga+anleitung"},{name:"Bauchatmung",detail:"90 Sek.",desc:"Tief atmen, entspannen.",yt:"bauchatmung+entspannung+übung"}]},
-{id:"do",label:"Do",title:"Core + Oberkörper",pauseEx:30,pauseCore:25,warmup:[{name:"Cat-Cow",detail:"45 Sek.",desc:"Buckel und Hohlkreuz.",yt:"cat+cow+übung+anleitung+deutsch"},{name:"World's Greatest Stretch",detail:"30 Sek./Seite",desc:"Ausfallschritt mit Rotation.",yt:"worlds+greatest+stretch+anleitung"},{name:"Schulter-CARs",detail:"30 Sek./Arm",desc:"Große Kreise.",yt:"shoulder+CARs+mobility+übung+anleitung"}],main:[],core:[{name:"Hollow Body Hold",detail:"3×30 Sek.",desc:"Bananenform, Rücken am Boden.",yt:"hollow+body+hold+anleitung+anfänger+core",tag:"Bauch"},{name:"Bicycle Crunches",detail:"3×35 Sek.",desc:"Ellbogen zum Gegenknie.",yt:"bicycle+crunches+richtige+ausführung+deutsch",tag:"Obliques"},{name:"Superman Hold",detail:"3×30 Sek.",desc:"Bauchlage, alles anheben.",yt:"superman+übung+rücken+anleitung+bodyweight",tag:"Rücken"},{name:"Dead Bugs",detail:"3×25 Sek./Seite",desc:"Gegengleich strecken.",yt:"dead+bug+übung+core+anleitung+deutsch",tag:"Bauch"},{name:"Side Plank",detail:"3×25 Sek./Seite",desc:"Seitlich, gerade halten.",yt:"side+plank+seitstütz+anleitung+deutsch",tag:"Obliques"},{name:"Plank",detail:"3×40 Sek.",desc:"Unterarme, Körper gerade.",yt:"plank+unterarmstütz+richtige+ausführung",tag:"Core"}],extra:[{name:"Breite Liegestütze",detail:"3×30 Sek.",desc:"Weiter als schulterbreit.",yt:"breite+liegestütze+ausführung+anleitung",tag:"Brust"},{name:"Tisch-Rudern",detail:"3×30 Sek.",desc:"Enger Griff.",yt:"bodyweight+row+tisch+rudern+zuhause",tag:"Rücken"}],cooldown:[{name:"Brustdehnung Türrahmen",detail:"30 Sek./Seite",desc:"Unterarm am Rahmen.",yt:"brustdehnung+türrahmen+anleitung"},{name:"Kobra-Stretch",detail:"30 Sek.",desc:"Arme strecken.",yt:"cobra+stretch+yoga+rücken+anleitung"},{name:"Seitliche Rumpfdehnung",detail:"25 Sek./Seite",desc:"Arm über Kopf zur Seite.",yt:"seitliche+rumpfdehnung+stehend+anleitung"}]},
-{id:"fr",label:"Fr",title:"Ganzkörper + Core",pauseEx:20,pauseCore:15,warmup:[{name:"Cat-Cow",detail:"60 Sek.",desc:"Buckel und Hohlkreuz.",yt:"cat+cow+übung+anleitung+deutsch"},{name:"Hüft-CARs",detail:"40 Sek./Bein",desc:"Kontrolliert rotieren.",yt:"hip+CARs+mobility+übung+hüfte"},{name:"Arm Circles + Hüftkreise",detail:"60 Sek.",desc:"Armkreise, Hüften kreisen.",yt:"arm+circles+hüftkreise+warmup+anleitung"}],main:[{name:"Squat to Stand",detail:"3×40 Sek.",desc:"Kniebeuge, explosiv hoch.",yt:"squat+to+stand+übung+anleitung",tag:"Ganzkörper"},{name:"Glute Bridge Marsch",detail:"3×40 Sek.",desc:"Brücke, abwechselnd Bein.",yt:"glute+bridge+march+übung+anleitung",tag:"Gesäß"},{name:"Plank Knee Taps",detail:"3×40 Sek.",desc:"Plank, Knie zur Brust.",yt:"plank+knee+taps+übung+anleitung",tag:"Core"},{name:"Liegestütze",detail:"3×40 Sek.",desc:"Volle oder Knie-Variante.",yt:"knie+liegestütze+anfänger+richtige+ausführung",tag:"Brust"},{name:"Birddog",detail:"3×40 Sek.",desc:"Vierfüßler, gegengleich strecken.",yt:"birddog+übung+anleitung+core",tag:"Ganzkörper"}],core:[{name:"Plank",detail:"3×40 Sek.",desc:"Unterarme, Körper gerade.",yt:"plank+unterarmstütz+richtige+ausführung",tag:"Core"},{name:"Hollow Body Hold",detail:"3×30 Sek.",desc:"Rückenlage, alles anheben.",yt:"hollow+body+hold+anleitung+anfänger+core",tag:"Bauch"},{name:"Superman Hold",detail:"3×30 Sek.",desc:"Bauchlage, alles anheben.",yt:"superman+übung+rücken+anleitung+bodyweight",tag:"Rücken"}],cooldown:[{name:"Stehende Vorbeuge",detail:"45 Sek.",desc:"Locker nach vorne hängen.",yt:"stehende+vorbeuge+dehnung+anleitung"},{name:"Tauben-Stretch",detail:"45 Sek./Seite",desc:"Intensiver Hüftöffner.",yt:"pigeon+stretch+hüfte+dehnen+anleitung"},{name:"Bauchatmung",detail:"90 Sek.",desc:"Tief atmen, Puls runter.",yt:"bauchatmung+entspannung+übung"}]},
+{id:"mo",label:"Mo",title:"Oberkörper + Core",pauseEx:60,warmup:[{name:"Cat-Cow",detail:"60 Sek.",desc:"Vierfüßler. Einatmen: Hohlkreuz. Ausatmen: Buckel. Fließend wechseln.",yt:"cat+cow+übung+anleitung+deutsch"},{name:"World's Greatest Stretch",detail:"40 Sek./Seite",desc:"Ausfallschritt, Hand am Boden, Arm zur Decke rotieren. Tief halten.",yt:"worlds+greatest+stretch+anleitung"},{name:"Schulter-CARs",detail:"30 Sek./Arm",desc:"Arm in maximalem Kreis rotieren. Langsam, kontrolliert, voller Radius.",yt:"shoulder+CARs+mobility+übung+anleitung"}],main:[{name:"Knie-Liegestütze",detail:"3×40 Sek.",desc:"Knie am Boden, Körper gerade. Langsam runter, kontrolliert hoch. Ellbogen 45°.",yt:"knie+liegestütze+anfänger+richtige+ausführung",tag:"Brust"},{name:"Tisch-Rudern",detail:"3×40 Sek.",desc:"Tischkante greifen, Brust zur Kante ziehen. Schulterblätter zusammen.",yt:"bodyweight+row+tisch+rudern+zuhause",tag:"Rücken"},{name:"Stuhl-Dips",detail:"3×35 Sek.",desc:"Hände auf Stuhlkante, Arme beugen bis 90°. Schultern bleiben unten.",yt:"stuhl+dips+trizeps+übung+anleitung",tag:"Trizeps"},{name:"Pike Push-ups",detail:"3×30 Sek.",desc:"Hüfte hoch in V-Form, Kopf zum Boden senken. Schulterübung.",yt:"pike+push+up+ausführung+deutsch+anleitung",tag:"Schultern"},{name:"Hollow Body Hold",detail:"3×30 Sek.",desc:"Rückenlage, Arme und Beine schweben. Rücken am Boden. Bananenform.",yt:"hollow+body+hold+anleitung+anfänger+core",tag:"Bauch"},{name:"Superman Hold",detail:"3×30 Sek.",desc:"Bauchlage, Arme und Beine abheben. Gesäß anspannen, Blick zum Boden.",yt:"superman+übung+rücken+anleitung+bodyweight",tag:"Rücken"},{name:"Plank",detail:"3×30 Sek.",desc:"Unterarme, Körper gerade. Bauch fest, nicht ins Hohlkreuz fallen.",yt:"plank+unterarmstütz+richtige+ausführung",tag:"Core"}],cooldown:[{name:"Brustdehnung Türrahmen",detail:"40 Sek./Seite",desc:"Unterarm am Türrahmen, Schritt nach vorne. Brust und Schulter dehnen.",yt:"brustdehnung+türrahmen+anleitung"},{name:"Kindshaltung",detail:"45 Sek.",desc:"Gesäß auf Fersen, Arme nach vorne strecken. Stirn ab, atmen, loslassen.",yt:"childs+pose+yoga+anleitung+deutsch"},{name:"Kobra-Stretch",detail:"30 Sek.",desc:"Bauchlage, Arme strecken, Oberkörper heben. Hüfte bleibt am Boden.",yt:"cobra+stretch+yoga+rücken+anleitung"}]},
+{id:"di",label:"Di",title:"Unterkörper + Core",pauseEx:45,warmup:[{name:"Cat-Cow",detail:"45 Sek.",desc:"Vierfüßler. Einatmen: Hohlkreuz. Ausatmen: Buckel. Fließend wechseln.",yt:"cat+cow+übung+anleitung+deutsch"},{name:"Hüft-CARs",detail:"30 Sek./Bein",desc:"Knie anheben, großer Kreis nach außen. Kontrolliert, Oberkörper stabil.",yt:"hip+CARs+mobility+übung+hüfte"},{name:"Tiefe Kniebeuge",detail:"45 Sek.",desc:"Fersen am Boden, tief in die Hocke. Ellbogen gegen Knie drücken.",yt:"deep+squat+hold+mobility+deutsch"}],main:[{name:"Kniebeugen",detail:"3×40 Sek.",desc:"Schulterbreit, Hüfte nach hinten-unten. Rücken gerade, mindestens parallel.",yt:"bodyweight+kniebeugen+richtige+ausführung",tag:"Beine"},{name:"Reverse Lunges",detail:"3×30 Sek./Seite",desc:"Großer Schritt nach hinten, Knie fast zum Boden. Durch Ferse zurückdrücken.",yt:"reverse+lunges+anleitung+auf+der+stelle",tag:"Beine"},{name:"Glute Bridges",detail:"3×35 Sek.",desc:"Rückenlage, Hüfte hoch bis Linie entsteht. Gesäß oben fest drücken.",yt:"glute+bridge+anleitung+anfänger",tag:"Gesäß"},{name:"Wadenheben",detail:"3×30 Sek.",desc:"Fußballen auf Stufe, hoch auf Zehenspitzen, Fersen tief absenken.",yt:"wadenheben+stehend+anleitung+bodyweight",tag:"Waden"},{name:"Dead Bugs",detail:"3×25 Sek./Seite",desc:"Rückenlage, gegengleich Arm und Bein strecken. Rücken bleibt am Boden.",yt:"dead+bug+übung+core+anleitung+deutsch",tag:"Bauch"},{name:"Side Plank",detail:"3×20 Sek./Seite",desc:"Unterarm stützen, Hüfte hoch. Gerade Linie, Becken stabil.",yt:"side+plank+seitstütz+anleitung+deutsch",tag:"Obliques"},{name:"Superman Hold",detail:"3×25 Sek.",desc:"Bauchlage, Arme und Beine abheben. Gesäß anspannen, Blick zum Boden.",yt:"superman+übung+rücken+anleitung+bodyweight",tag:"Rücken"}],cooldown:[{name:"Tauben-Stretch",detail:"30 Sek./Seite",desc:"Vorderbein angewinkelt, hinteres Bein lang. In die Hüftdehnung atmen.",yt:"pigeon+stretch+hüfte+dehnen+anleitung"},{name:"Oberschenkel-Dehnung",detail:"30 Sek./Bein",desc:"Fuß zum Gesäß ziehen, Hüfte leicht vorschieben. Vorderer Oberschenkel.",yt:"quadrizeps+dehnung+stehend+anleitung"},{name:"Wadendehnung",detail:"25 Sek./Seite",desc:"An der Wand, Bein nach hinten, Ferse in den Boden. Wade dehnen.",yt:"wadendehnung+wand+anleitung"}]},
+{id:"mi",label:"Mi",title:"Mobility",pauseEx:15,warmup:[{name:"Cat-Cow",detail:"60 Sek.",desc:"Vierfüßler. Einatmen: Hohlkreuz. Ausatmen: Buckel. Fließend wechseln.",yt:"cat+cow+übung+anleitung+deutsch"},{name:"Schulter-CARs",detail:"45 Sek./Arm",desc:"Arm in maximalem Kreis rotieren. Langsam, kontrolliert, voller Radius.",yt:"shoulder+CARs+mobility+übung+anleitung"},{name:"Hüft-CARs",detail:"45 Sek./Bein",desc:"Knie anheben, großer Kreis nach außen. Kontrolliert, Oberkörper stabil.",yt:"hip+CARs+mobility+übung+hüfte"}],main:[{name:"World's Greatest Stretch",detail:"60 Sek./Seite",desc:"Ausfallschritt, Hand am Boden, Arm zur Decke rotieren. Tief halten.",yt:"worlds+greatest+stretch+mobility+flow",tag:"Ganzkörper"},{name:"Tiefer Squat-Flow",detail:"2 Min.",desc:"Tiefe Hocke, Fersen am Boden. Sanft wippen, Hüfte öffnen.",yt:"deep+squat+hold+mobility+routine",tag:"Hüfte"},{name:"Tauben-Pose",detail:"60 Sek./Seite",desc:"Vorderbein angewinkelt, hinteres Bein lang. In die Hüftdehnung atmen.",yt:"pigeon+pose+yoga+anleitung+deutsch",tag:"Hüfte"},{name:"Brücke vom Boden",detail:"5×20 Sek.",desc:"Rückenlage, Hüfte hoch. Brust öffnen, Gesäß anspannen.",yt:"glute+bridge+brücke+mobility",tag:"Wirbelsäule"},{name:"Thorakale Rotation",detail:"50 Sek./Seite",desc:"Vierfüßler, Hand hinter Kopf. Ellbogen zur Decke drehen. BWS öffnen.",yt:"thorakale+rotation+vierfüßler+mobilität",tag:"BWS"},{name:"Cobra-Stretch",detail:"5×20 Sek.",desc:"Bauchlage, Arme strecken, Oberkörper heben. Schultern weg von den Ohren.",yt:"cobra+stretch+yoga+rücken+deutsch",tag:"LWS"},{name:"Scorpion-Stretch",detail:"45 Sek./Seite",desc:"Bauchlage, Bein über Körper zur Gegenseite. BWS und Hüfte öffnen.",yt:"scorpion+stretch+übung+mobility",tag:"BWS/Hüfte"},{name:"Side Plank",detail:"45 Sek./Seite",desc:"Unterarm stützen, Hüfte hoch. Gerade Linie, Becken stabil.",yt:"side+plank+seitstütz+anleitung+deutsch",tag:"Rumpf"},{name:"Dead Bug",detail:"40 Sek./Seite",desc:"Rückenlage, gegengleich Arm und Bein strecken. Rücken bleibt am Boden.",yt:"dead+bug+übung+core+anleitung+deutsch",tag:"Core"}],cooldown:[{name:"Knie zur Brust",detail:"45 Sek./Seite",desc:"Rückenlage, Knie sanft zur Brust ziehen. Unterer Rücken entspannt.",yt:"knie+zur+brust+rückenlage+dehnung"},{name:"Wirbelsäulendrehung",detail:"50 Sek./Seite",desc:"Rückenlage, Knie zur Seite, Blick gegenüber. Schultern am Boden.",yt:"liegende+wirbelsäulendrehung+yoga+anleitung"},{name:"Bauchatmung",detail:"90 Sek.",desc:"Hände auf Bauch, tief einatmen, langsam ausatmen. Komplett loslassen.",yt:"bauchatmung+entspannung+übung"}]},
+{id:"do",label:"Do",title:"Core + Oberkörper",pauseEx:30,warmup:[{name:"Cat-Cow",detail:"45 Sek.",desc:"Vierfüßler. Einatmen: Hohlkreuz. Ausatmen: Buckel. Fließend wechseln.",yt:"cat+cow+übung+anleitung+deutsch"},{name:"World's Greatest Stretch",detail:"30 Sek./Seite",desc:"Ausfallschritt, Hand am Boden, Arm zur Decke rotieren. Tief halten.",yt:"worlds+greatest+stretch+anleitung"},{name:"Schulter-CARs",detail:"30 Sek./Arm",desc:"Arm in maximalem Kreis rotieren. Langsam, kontrolliert, voller Radius.",yt:"shoulder+CARs+mobility+übung+anleitung"}],main:[{name:"Hollow Body Hold",detail:"3×30 Sek.",desc:"Rückenlage, Arme und Beine schweben. Rücken am Boden. Bananenform.",yt:"hollow+body+hold+anleitung+anfänger+core",tag:"Bauch"},{name:"Bicycle Crunches",detail:"3×35 Sek.",desc:"Rückenlage, Ellbogen zum Gegenknie rotieren. Schulterblätter anheben.",yt:"bicycle+crunches+richtige+ausführung+deutsch",tag:"Obliques"},{name:"Superman Hold",detail:"3×30 Sek.",desc:"Bauchlage, Arme und Beine abheben. Gesäß anspannen, Blick zum Boden.",yt:"superman+übung+rücken+anleitung+bodyweight",tag:"Rücken"},{name:"Dead Bugs",detail:"3×25 Sek./Seite",desc:"Rückenlage, gegengleich Arm und Bein strecken. Rücken bleibt am Boden.",yt:"dead+bug+übung+core+anleitung+deutsch",tag:"Bauch"},{name:"Side Plank",detail:"3×25 Sek./Seite",desc:"Unterarm stützen, Hüfte hoch. Gerade Linie, Becken stabil.",yt:"side+plank+seitstütz+anleitung+deutsch",tag:"Obliques"},{name:"Plank",detail:"3×40 Sek.",desc:"Unterarme, Körper gerade. Bauch fest, nicht ins Hohlkreuz fallen.",yt:"plank+unterarmstütz+richtige+ausführung",tag:"Core"},{name:"Breite Liegestütze",detail:"3×30 Sek.",desc:"Hände weiter als schulterbreit. Brust zum Boden, kontrolliert hoch.",yt:"breite+liegestütze+ausführung+anleitung",tag:"Brust"},{name:"Tisch-Rudern",detail:"3×30 Sek.",desc:"Tischkante greifen, Brust zur Kante ziehen. Schulterblätter zusammen.",yt:"bodyweight+row+tisch+rudern+zuhause",tag:"Rücken"}],cooldown:[{name:"Brustdehnung Türrahmen",detail:"30 Sek./Seite",desc:"Unterarm am Türrahmen, Schritt nach vorne. Brust und Schulter dehnen.",yt:"brustdehnung+türrahmen+anleitung"},{name:"Kobra-Stretch",detail:"30 Sek.",desc:"Bauchlage, Arme strecken, Oberkörper heben. Hüfte bleibt am Boden.",yt:"cobra+stretch+yoga+rücken+anleitung"},{name:"Seitliche Rumpfdehnung",detail:"25 Sek./Seite",desc:"Arm über Kopf zur Seite neigen. Flanke lang ziehen.",yt:"seitliche+rumpfdehnung+stehend+anleitung"}]},
+{id:"fr",label:"Fr",title:"Ganzkörper + Core",pauseEx:20,warmup:[{name:"Cat-Cow",detail:"60 Sek.",desc:"Vierfüßler. Einatmen: Hohlkreuz. Ausatmen: Buckel. Fließend wechseln.",yt:"cat+cow+übung+anleitung+deutsch"},{name:"Hüft-CARs",detail:"40 Sek./Bein",desc:"Knie anheben, großer Kreis nach außen. Kontrolliert, Oberkörper stabil.",yt:"hip+CARs+mobility+übung+hüfte"},{name:"Arm Circles + Hüftkreise",detail:"60 Sek.",desc:"Große Armkreise vorwärts und rückwärts, dann Hüften kreisen.",yt:"arm+circles+hüftkreise+warmup+anleitung"}],main:[{name:"Squat to Stand",detail:"3×40 Sek.",desc:"Tiefe Kniebeuge, explosiv hochkommen. Arme über Kopf schwingen.",yt:"squat+to+stand+übung+anleitung",tag:"Ganzkörper"},{name:"Glute Bridge Marsch",detail:"3×40 Sek.",desc:"Brücke halten, abwechselnd ein Bein anheben. Hüfte stabil.",yt:"glute+bridge+march+übung+anleitung",tag:"Gesäß"},{name:"Plank Knee Taps",detail:"3×40 Sek.",desc:"Plank-Position, abwechselnd Knie zur Brust. Rumpf stabil halten.",yt:"plank+knee+taps+übung+anleitung",tag:"Core"},{name:"Liegestütze",detail:"3×40 Sek.",desc:"Volle oder Knie-Variante. Kontrolliert runter, explosiv hoch.",yt:"knie+liegestütze+anfänger+richtige+ausführung",tag:"Brust"},{name:"Birddog",detail:"3×40 Sek.",desc:"Vierfüßler, gegengleich Arm und Bein strecken. Rumpf stabil.",yt:"birddog+übung+anleitung+core",tag:"Ganzkörper"},{name:"Plank",detail:"3×40 Sek.",desc:"Unterarme, Körper gerade. Bauch fest, nicht ins Hohlkreuz fallen.",yt:"plank+unterarmstütz+richtige+ausführung",tag:"Core"},{name:"Hollow Body Hold",detail:"3×30 Sek.",desc:"Rückenlage, Arme und Beine schweben. Rücken am Boden. Bananenform.",yt:"hollow+body+hold+anleitung+anfänger+core",tag:"Bauch"},{name:"Superman Hold",detail:"3×30 Sek.",desc:"Bauchlage, Arme und Beine abheben. Gesäß anspannen, Blick zum Boden.",yt:"superman+übung+rücken+anleitung+bodyweight",tag:"Rücken"}],cooldown:[{name:"Stehende Vorbeuge",detail:"45 Sek.",desc:"Locker nach vorne hängen, Beine leicht gebeugt. Rücken entspannen.",yt:"stehende+vorbeuge+dehnung+anleitung"},{name:"Tauben-Stretch",detail:"45 Sek./Seite",desc:"Vorderbein angewinkelt, hinteres Bein lang. In die Hüftdehnung atmen.",yt:"pigeon+stretch+hüfte+dehnen+anleitung"},{name:"Bauchatmung",detail:"90 Sek.",desc:"Hände auf Bauch, tief einatmen, langsam ausatmen. Komplett loslassen.",yt:"bauchatmung+entspannung+übung"}]},
 ];
 
 /* ═══ TIMELINE ═══ */
-function buildTimeline(day){const s=[],add=exs=>{exs.forEach(ex=>{const sec=parseSec(ex.detail)||35,sets=parseSets(ex.detail),sides=hasSides(ex.detail);s.push({type:"exercise",...ex,secPerPhase:sec,totalSets:sets,sides,totalPhases:sets*(sides?2:1),setPause:Math.min(25,day.pauseEx)});});};const addS=(exs,p,l)=>{if(!exs?.length)return;if(s.length>0)s.push({type:"section",seconds:p,label:l});add(exs);};add(day.warmup);if(day.main.length)addS(day.main,15,"Training");if((day.core||[]).length)addS(day.core,45,"Core");if((day.extra||[]).length)addS(day.extra,45,"Oberkörper");addS(day.cooldown,10,"Cooldown");const f=[];for(let i=0;i<s.length;i++){f.push(s[i]);if(s[i].type==="exercise"&&i<s.length-1&&s[i+1].type==="exercise")f.push({type:"pause",seconds:day.pauseEx});}return f;}
+function buildTimeline(day){const s=[],add=exs=>{exs.forEach(ex=>{const sec=parseSec(ex.detail)||35,sets=parseSets(ex.detail),sides=hasSides(ex.detail);s.push({type:"exercise",...ex,secPerPhase:sec,totalSets:sets,sides,totalPhases:sets*(sides?2:1),setPause:Math.min(25,day.pauseEx)});});};
+  add(day.warmup);
+  // Training = main + core + extra merged
+  const training=[...(day.main||[]),...(day.core||[]),...(day.extra||[])];
+  if(training.length){if(s.length>0)s.push({type:"section",seconds:15,label:"Training"});add(training);}
+  if(day.cooldown?.length){s.push({type:"section",seconds:10,label:"Cooldown"});add(day.cooldown);}
+  const f=[];for(let i=0;i<s.length;i++){f.push(s[i]);if(s[i].type==="exercise"&&i<s.length-1&&s[i+1].type==="exercise")f.push({type:"pause",seconds:day.pauseEx});}return f;}
 function totalSeconds(tl){let t=0;for(const s of tl){if(s.type==="exercise")t+=s.totalPhases*s.secPerPhase+(s.totalSets-1)*s.setPause;else t+=s.seconds;}return t;}
 
 /* ═══ HOOKS ═══ */
@@ -55,7 +62,7 @@ DEINE FÄHIGKEITEN:
 - Trainingszeiten anpassen (Sätze, Sekunden pro Satz, Pausen)
 - Fokus auf bestimmte Muskelgruppen setzen
 - Gesamtdauer eines Trainingstages verkürzen oder verlängern
-- Übungen zwischen Sektionen verschieben (warmup, main, core, extra, cooldown)
+- Übungen zwischen Sektionen verschieben (warmup, main, cooldown)
 - Schwierigkeitsgrad anpassen (leichtere/schwerere Varianten)
 
 REGELN:
@@ -65,8 +72,13 @@ REGELN:
 
 Bei Änderung füge einen JSON-Block ein:
 \`\`\`json
-{"action":"update_day","dayIndex":0,"changes":{"title":"...","pauseEx":60,"pauseCore":45,"warmup":[...],"main":[...],"core":[...],"extra":[...],"cooldown":[...]}}
+{"action":"update_day","dayIndex":0,"changes":{"title":"...","pauseEx":60,"warmup":[...],"main":[...],"cooldown":[...]}}
 \`\`\`
+
+Es gibt nur 3 Sektionen pro Tag:
+- warmup: Aufwärmen, Mobilisation, Aktivierung
+- main: Das eigentliche Training — egal ob Kraft, Core, Mobility, HIIT oder Mix. Alles kommt hierhin.
+- cooldown: Dehnung, Entspannung, Runterkommen
 
 Übungs-Format: {"name":"Name","detail":"3×30 Sek.","desc":"Kurzbeschreibung","yt":"youtube+suchbegriffe","tag":"Muskelgruppe"}
 Detail-Formate: "30 Sek." | "3×40 Sek." | "30 Sek./Seite" | "3×25 Sek./Seite" | "2 Min."
@@ -97,7 +109,7 @@ const updateMsgs = (fn) => { setMsgs(prev => { const next = typeof fn === "funct
 
 useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs,ld]);
 
-const ctx=()=>{return days.map((d,i)=>{const s=[];["warmup","main","core","extra","cooldown"].forEach(k=>{if(d[k]?.length)s.push(`${k}:${d[k].map(e=>`${e.name}(${e.detail})`).join(",")}`);});return`${DL[i]}-${d.title}\n${s.join("\n")}`;}).join("\n\n");};
+const ctx=()=>{return days.map((d,i)=>{const s=[];["warmup","main","cooldown"].forEach(k=>{if(d[k]?.length)s.push(`${k}:${d[k].map(e=>`${e.name}(${e.detail})`).join(",")}`);});return`${DL[i]}-${d.title}\n${s.join("\n")}`;}).join("\n\n");};
 
 // Parse JSON blocks from AI response, return {text, proposals[]}
 const parseResponse = (txt) => {
@@ -253,7 +265,7 @@ return(
       </div>
       {/* Show exercise summary */}
       <div style={{fontSize:12,color:C.muted,marginBottom:p.status==="pending"?8:0}}>
-        {["warmup","main","core","extra","cooldown"].map(k => p.changes[k]?.length ? `${k}: ${p.changes[k].map(e=>e.name).join(", ")}` : null).filter(Boolean).join(" · ")}
+        {["warmup","main","cooldown"].map(k => p.changes[k]?.length ? `${k}: ${p.changes[k].map(e=>e.name).join(", ")}` : null).filter(Boolean).join(" · ")}
         {p.changes.pauseEx && ` · Pause: ${p.changes.pauseEx}s`}
       </div>
       {/* Action buttons — only for pending */}
@@ -321,14 +333,13 @@ function savePlan(d){try{localStorage.setItem(SK,JSON.stringify(d));}catch(e){}}
 export default function App(){
 const [days,setDays]=useState(()=>loadPlan()||JSON.parse(JSON.stringify(DEFAULT_DAYS)));
 const [dayIdx,setDayIdx]=useState(()=>({1:0,2:1,3:2,4:3,5:4})[new Date().getDay()]??0);
-const [mode,setMode]=useState("manual");
 const [cur,setCur]=useState(-1);
 const [phase,setPhase]=useState(0);
 const [rem,setRem]=useState(0);
 const [inSP,setInSP]=useState(false);
 const [running,setRunning]=useState(false);
 const [done,setDone]=useState(new Set());
-const [exp,setExp]=useState(-1);
+
 const tick=useRef(null),beep=useBeep(),sRef=useRef(null),pAdv=useRef(false);
 
 useWakeLock(cur>=0);
@@ -342,17 +353,12 @@ const allDone=done.size===tl.length&&tl.length>0;
 const cSide=step?.type==="exercise"&&step.sides?(phase%2===0?"L":"R"):null;
 const cSet=step?.type==="exercise"?Math.floor(phase/(step.sides?2:1))+1:0;
 
-const resetPlan=()=>{if(confirm("Plan auf Standard zurücksetzen?")){try{localStorage.removeItem(SK);}catch(e){}setDays(JSON.parse(JSON.stringify(DEFAULT_DAYS)));clearInterval(tick.current);setCur(-1);setPhase(0);setRem(0);setRunning(false);setDone(new Set());setExp(-1);pAdv.current=false;}};
-const updDay=useCallback((i,ch)=>{setDays(p=>{const n=JSON.parse(JSON.stringify(p));if(i>=0&&i<n.length)Object.keys(ch).forEach(k=>{n[i][k]=ch[k];});return n;});if(i===dayIdx){clearInterval(tick.current);setCur(-1);setPhase(0);setRem(0);setRunning(false);setDone(new Set());setExp(-1);pAdv.current=false;}},[dayIdx]);
+const resetPlan=()=>{if(confirm("Plan auf Standard zurücksetzen?")){try{localStorage.removeItem(SK);}catch(e){}setDays(JSON.parse(JSON.stringify(DEFAULT_DAYS)));clearInterval(tick.current);setCur(-1);setPhase(0);setRem(0);setRunning(false);setDone(new Set());pAdv.current=false;}};
+const updDay=useCallback((i,ch)=>{setDays(p=>{const n=JSON.parse(JSON.stringify(p));if(i>=0&&i<n.length)Object.keys(ch).forEach(k=>{n[i][k]=ch[k];});return n;});if(i===dayIdx){clearInterval(tick.current);setCur(-1);setPhase(0);setRem(0);setRunning(false);setDone(new Set());pAdv.current=false;}},[dayIdx]);
 
-useEffect(()=>{clearInterval(tick.current);setCur(-1);setPhase(0);setRem(0);setRunning(false);setDone(new Set());setInSP(false);setExp(-1);},[dayIdx]);
-useEffect(()=>{if(cur<0||cur>=tl.length)return;const s=tl[cur];setPhase(0);setInSP(false);setRem(s.type==="exercise"?s.secPerPhase:s.seconds);setExp(cur);
-// Auto-start logic: in auto mode always start; in manual mode only start pauses/sections (not exercises)
-if(pAdv.current){
-  if(mode==="auto") setRunning(true);
-  else if(s.type==="pause"||s.type==="section") setRunning(true);
-  else setRunning(false); // manual + exercise = just expand, don't start
-} else setRunning(false);
+useEffect(()=>{clearInterval(tick.current);setCur(-1);setPhase(0);setRem(0);setRunning(false);setDone(new Set());setInSP(false);},[dayIdx]);
+useEffect(()=>{if(cur<0||cur>=tl.length)return;const s=tl[cur];setPhase(0);setInSP(false);setRem(s.type==="exercise"?s.secPerPhase:s.seconds);
+if(pAdv.current) setRunning(true); else setRunning(false);
 pAdv.current=false;},[cur]);
 
 useEffect(()=>{
@@ -402,11 +408,12 @@ return()=>clearInterval(tick.current);
 
 useEffect(()=>{sRef.current?.scrollIntoView({behavior:"smooth",block:"center"});},[cur]);
 
-const startAt=i=>{clearInterval(tick.current);pAdv.current=false;setCur(i);setTimeout(()=>setRunning(true),80);};
 const toggle=()=>{if(rem<=0&&step?.type==="exercise"){setRem(step.secPerPhase);setRunning(true);return;}setRunning(!running);};
 const skip=()=>{clearInterval(tick.current);setDone(p=>{const n=new Set(p);n.add(cur);return n;});setInSP(false);if(cur<tl.length-1){pAdv.current=true;setCur(c=>c+1);}else setRunning(false);};
+const prev=()=>{if(cur<=0)return;clearInterval(tick.current);setInSP(false);setRunning(false);let t=cur-1;while(t>0&&tl[t].type!=="exercise")t--;setDone(p=>{const n=new Set(p);n.delete(cur);n.delete(t);return n;});pAdv.current=false;setCur(t);};
+const restart=()=>{clearInterval(tick.current);setPhase(0);setInSP(false);if(step?.type==="exercise")setRem(step.secPerPhase);else setRem(step?.seconds||0);setRunning(false);};
 const startW=()=>{pAdv.current=true;setCur(0);};
-const resetW=()=>{clearInterval(tick.current);setCur(-1);setPhase(0);setRem(0);setRunning(false);setDone(new Set());setInSP(false);setExp(-1);pAdv.current=false;};
+const resetW=()=>{clearInterval(tick.current);setCur(-1);setPhase(0);setRem(0);setRunning(false);setDone(new Set());setInSP(false);pAdv.current=false;};
 
 const secs=[];let cS={label:"Warmup",items:[]};
 tl.forEach((s,i)=>{if(s.type==="section"){if(cS.items.length)secs.push(cS);cS={label:s.label,items:[],tIdx:i};}else cS.items.push({...s,idx:i});});
@@ -426,9 +433,6 @@ return(
       <p className="text-sm font-bold mt-0.5">{day.title} <span className="font-normal" style={{color:C.muted}}>{Math.round(totSec/60)} min</span></p>
     </div>
     <div className="flex items-center gap-2">
-      <button onClick={()=>{setMode(m=>m==="manual"?"auto":"manual");resetW();}} className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all" style={{background:mode==="auto"?C.text:C.card,color:mode==="auto"?"#fff":C.sub,border:`1px solid ${mode==="auto"?"transparent":C.border}`}}>
-        {mode==="auto"?"Auto":"Manuell"}
-      </button>
       <span className="text-sm font-bold tabular-nums" style={{color:C.text}}>{Math.round(pct)}%</span>
     </div>
   </div>
@@ -443,7 +447,7 @@ return(
 
 <div className="max-w-lg mx-auto px-5 pt-5">
 
-{mode==="auto"&&cur<0&&!allDone&&(
+{cur<0&&!allDone&&(
   <button onClick={startW} className="w-full py-3.5 rounded-xl text-white font-semibold text-sm mb-6 active:scale-[0.98] transition-all" style={{background:C.accent}}>Workout starten</button>
 )}
 
@@ -469,7 +473,7 @@ return(
   </div>
   <div className="space-y-1.5">
   {sec.items.map(s=>{
-    const i=s.idx,active=i===cur,isDone=done.has(i),isExp=exp===i||active;
+    const i=s.idx,active=i===cur,isDone=done.has(i);
 
     if(s.type==="pause"){
       if(isDone&&!active)return <div key={i} className="h-px mx-6" style={{background:C.border}}/>;
@@ -520,56 +524,41 @@ return(
         </div>
       )}
 
-      <div className="px-3.5 py-2.5 flex items-center gap-3">
+      <div style={{padding:"10px 14px",display:"flex",alignItems:"flex-start",gap:12}}>
         {isDone?(
-          <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{background:C.doneBg}}>
+          <div style={{width:36,height:36,borderRadius:"50%",background:C.doneBg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.done} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
         ):(
+          <div style={{marginTop:1}}>
           <Ring pct={active&&!inSP?(s.secPerPhase>0?((s.secPerPhase-rem)/s.secPerPhase)*100:0):0} size={38} sw={active?3:2}>
-            <span className="text-xs font-semibold tabular-nums" style={{color:active?C.text:C.muted}}>
+            <span style={{fontSize:12,fontWeight:600,color:active?C.text:C.muted,fontVariantNumeric:"tabular-nums"}}>
               {active&&running?fmt(rem):fmt(s.secPerPhase)}
             </span>
           </Ring>
+          </div>
         )}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className={`text-sm font-semibold ${isDone?"opacity-50":""}`}>{s.name}</span>
-            {s.tag&&<span className="text-xs" style={{color:C.muted}}>{s.tag}</span>}
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:14,fontWeight:600,color:isDone?C.muted:C.text,opacity:isDone?0.5:1}}>{s.name}</span>
+            {s.tag&&<span style={{fontSize:12,color:C.muted}}>{s.tag}</span>}
           </div>
-          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-            <span className="text-xs" style={{color:C.muted}}>{s.detail}</span>
-            {active&&!isDone&&s.totalSets>1&&<span className="text-xs font-semibold tabular-nums" style={{color:C.accent}}>Satz {cSet}/{s.totalSets}</span>}
-            {active&&!isDone&&cSide&&<span className="text-xs font-semibold" style={{color:C.sub}}>{cSide==="L"?"Links":"Rechts"}</span>}
-            {active&&inSP&&<span className="text-xs font-medium" style={{color:C.accent}}>Satzpause {fmt(rem)}</span>}
+          <div style={{display:"flex",alignItems:"center",gap:8,marginTop:2,flexWrap:"wrap"}}>
+            <span style={{fontSize:12,color:C.muted}}>{s.detail}</span>
+            {active&&!isDone&&s.totalSets>1&&<span style={{fontSize:12,fontWeight:600,color:C.accent,fontVariantNumeric:"tabular-nums"}}>Satz {cSet}/{s.totalSets}</span>}
+            {active&&!isDone&&cSide&&<span style={{fontSize:12,fontWeight:600,color:C.sub}}>{cSide==="L"?"Links":"Rechts"}</span>}
+            {active&&inSP&&<span style={{fontSize:12,fontWeight:500,color:C.accent}}>Satzpause {fmt(rem)}</span>}
           </div>
+          {!isDone&&<p style={{fontSize:11,lineHeight:1.4,color:C.muted,margin:"4px 0 0"}}>{s.desc}</p>}
         </div>
-        {/* Video icon — always visible when expanded, positioned inline */}
-        {isExp&&!isDone&&s.yt&&(
+        {/* YouTube icon top-right */}
+        {!isDone&&s.yt&&(
           <a href={ytUrl(s.yt)} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()}
-            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors hover:opacity-70" style={{background:C.accentSoft,color:"#c4302b"}}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2 31.5 31.5 0 000 12a31.5 31.5 0 00.5 5.8 3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1c.4-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
+            style={{flexShrink:0,marginTop:1,display:"flex",alignItems:"center",justifyContent:"center",width:28,height:28,borderRadius:6,color:"#c4302b",opacity:0.6}}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2 31.5 31.5 0 000 12a31.5 31.5 0 00.5 5.8 3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1c.4-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
           </a>
         )}
-        {/* Expand chevron when not expanded and not active */}
-        {!isExp&&!isDone&&!active&&(
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2" strokeLinecap="round" className="flex-shrink-0"><path d="M6 9l6 6 6-6"/></svg>
-        )}
       </div>
-
-      {/* Expanded: description + start button in manual */}
-      {isExp&&!isDone&&(
-        <div className="px-3.5 pb-3">
-          <p className="text-xs leading-snug" style={{color:C.muted}}>{s.desc}</p>
-          {/* START button in manual mode — only when not already active/running */}
-          {mode==="manual"&&!active&&(
-            <button onClick={e=>{e.stopPropagation();startAt(i);}}
-              className="mt-2.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white active:scale-95 transition-all" style={{background:C.accent}}>
-              Start
-            </button>
-          )}
-        </div>
-      )}
     </div>);
   })}
   </div>
@@ -580,24 +569,38 @@ return(
 <button onClick={resetPlan} className="w-full py-2 rounded-lg text-xs mt-4 mb-6 transition-colors" style={{color:C.border}}>Plan auf Standard zurücksetzen</button>
 </div>
 
-{/* CONTROL FOOTER — visible whenever a step is active */}
+{/* ═══ COMPACT CONTROL BAR ═══ */}
 {cur>=0&&step&&!allDone&&(
-<div className="fixed bottom-0 left-0 right-0 z-40" style={{background:"rgba(250,249,247,0.96)",backdropFilter:"blur(20px)",borderTop:`1px solid ${C.border}`}}>
-<div className="max-w-lg mx-auto px-5 flex items-center gap-3" style={{paddingTop:10,paddingBottom:"max(10px,env(safe-area-inset-bottom))"}}>
-  <Ring pct={step.type==="exercise"?(inSP?100:(step.secPerPhase>0?((step.secPerPhase-rem)/step.secPerPhase)*100:0)):(step.seconds>0?((step.seconds-rem)/step.seconds)*100:0)} size={42} sw={3}>
-    <span className="text-xs font-bold tabular-nums" style={{color:C.text}}>{fmt(rem)}</span>
-  </Ring>
-  <div className="flex-1 min-w-0">
-    <div className="text-sm font-semibold truncate">{step.type==="pause"||step.type==="section"?"Pause":(inSP?"Satzpause":step.name)}{cSide&&!inSP?` · ${cSide==="L"?"Links":"Rechts"}`:""}</div>
-    <div className="text-xs tabular-nums" style={{color:C.muted}}>{step.type==="exercise"&&step.totalSets>1?`Satz ${cSet}/${step.totalSets}`:""}</div>
+<div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:40}}>
+  <div style={{maxWidth:480,margin:"0 auto",padding:"0 20px",paddingBottom:"max(16px, env(safe-area-inset-bottom))"}}>
+    <div style={{background:C.text,borderRadius:R,padding:"10px 12px",display:"flex",alignItems:"center",gap:8,boxShadow:"0 4px 24px rgba(0,0,0,0.2)"}}>
+      <Ring pct={step.type==="exercise"?(inSP?100:(step.secPerPhase>0?((step.secPerPhase-rem)/step.secPerPhase)*100:0)):(step.seconds>0?((step.seconds-rem)/step.seconds)*100:0)} size={40} sw={3}>
+        <span style={{fontSize:13,fontWeight:700,color:"#fff",fontVariantNumeric:"tabular-nums"}}>{fmt(rem)}</span>
+      </Ring>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:13,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"rgba(255,255,255,0.9)"}}>
+          {step.type==="pause"||step.type==="section"?"Pause":(inSP?"Satzpause":step.name)}{cSide&&!inSP?` · ${cSide==="L"?"L":"R"}`:""}
+        </div>
+        {step.type==="exercise"&&step.totalSets>1&&(
+          <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",fontVariantNumeric:"tabular-nums",marginTop:1}}>Satz {cSet}/{step.totalSets}</div>
+        )}
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+        <button onClick={prev} disabled={cur<=0} style={{width:34,height:34,borderRadius:R,border:"none",background:"rgba(255,255,255,0.1)",cursor:cur>0?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",opacity:cur>0?1:0.25,color:"#fff"}}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 20l-10-8 10-8V20zM5 20V4h2v16H5z"/></svg>
+        </button>
+        <button onClick={restart} style={{width:34,height:34,borderRadius:R,border:"none",background:"rgba(255,255,255,0.1)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff"}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        </button>
+        <button onClick={toggle} style={{width:42,height:42,borderRadius:R,border:"none",background:running?"#fff":C.accent,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:running?C.text:"#fff",transition:"background 0.15s"}}>
+          {running?(<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>):(<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>)}
+        </button>
+        <button onClick={skip} style={{width:34,height:34,borderRadius:R,border:"none",background:"rgba(255,255,255,0.1)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff"}}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8V4zM19 4v16h-2V4h2z"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
-  <button onClick={toggle} className="w-10 h-10 rounded-xl flex items-center justify-center text-white flex-shrink-0 active:scale-95 transition-all" style={{background:running?C.text:C.accent}}>
-    {running?(<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>):(<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>)}
-  </button>
-  <button onClick={skip} className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors" style={{background:C.card,border:`1px solid ${C.border}`,color:C.sub}}>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8V4zM19 4v16h-2V4h2z"/></svg>
-  </button>
-</div>
 </div>
 )}
 
