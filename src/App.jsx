@@ -88,7 +88,29 @@ Detail-Formate: "30 Sek." | "3×40 Sek." | "30 Sek./Seite" | "3×25 Sek./Seite" 
 Wenn der Nutzer den Plan sehen will, beschreibe ihn kurz ohne JSON.
 
 WICHTIG: Wenn die Anfrage ALLE 5 Tage betrifft, erstelle JSON-Blöcke für ALLE 5 Tage in einer Antwort. Das ist möglich und erwünscht.
-Erstelle immer alle nötigen JSON-Blöcke auf einmal — der Nutzer soll nicht nachfragen müssen.`;
+Erstelle immer alle nötigen JSON-Blöcke auf einmal — der Nutzer soll nicht nachfragen müssen.
+
+WARMUP/COOLDOWN ANPASSUNG:
+Wenn du das Training (main) eines Tages änderst, frage den Nutzer aktiv:
+"Soll ich Warmup und Cooldown an den geänderten Tagen entsprechend anpassen? Z.B. bei mehr Schulterübungen ein schulter-spezifisches Warmup und passende Dehnungen im Cooldown."
+Warte die Antwort ab, bevor du Warmup/Cooldown änderst — es sei denn, der Nutzer hat explizit den ganzen Tag oder Wochenplan angefragt.
+
+FORMATIERUNG:
+- Nutze Markdown für Struktur: **fett** für Übungsnamen, Aufzählungen mit - für Listen
+- Halte Antworten kurz aber klar strukturiert`;
+
+/* Simple markdown to HTML for chat messages */
+function MdText({text, color}) {
+  const html = text
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code style="background:#f3f0ec;padding:1px 4px;border-radius:3px;font-size:12px">$1</code>')
+    .replace(/^[-•]\s+(.+)/gm, '<div style="padding-left:12px;text-indent:-12px">• $1</div>')
+    .replace(/^\d+\.\s+(.+)/gm, (m,p1,off,str) => `<div style="padding-left:16px;text-indent:-16px">${m.match(/^\d+/)[0]}. ${p1}</div>`)
+    .replace(/\n/g, '<br/>');
+  return <div style={{color}} dangerouslySetInnerHTML={{__html:html}}/>;
+}
 
 const CHAT_STORAGE_KEY = "mam-chat-history";
 function loadChat() { try { const s = localStorage.getItem(CHAT_STORAGE_KEY); if (s) return JSON.parse(s); } catch(e) {} return null; }
@@ -244,11 +266,11 @@ return(
 {msgs.map((m,i)=>(
 <div key={m.id||i} className="mi" style={{display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start",gap:6}}>
   {/* Message bubble */}
-  <div style={{maxWidth:"85%",borderRadius:16,padding:"10px 14px",fontSize:14,lineHeight:1.5,whiteSpace:"pre-wrap",
+  <div style={{maxWidth:"85%",borderRadius:16,padding:"10px 14px",fontSize:14,lineHeight:1.5,
     background:m.role==="user"?C.accent:C.card,color:m.role==="user"?"#fff":C.text,
     border:m.role!=="user"?`1px solid ${C.border}`:undefined,
     borderBottomRightRadius:m.role==="user"?6:16,borderBottomLeftRadius:m.role!=="user"?6:16}}>
-    {m.content}
+    {m.role==="user"?<span style={{whiteSpace:"pre-wrap"}}>{m.content}</span>:<MdText text={m.content} color={C.text}/>}
   </div>
 
   {/* Proposal cards */}
@@ -308,7 +330,6 @@ return(
   <div style={{display:"flex",alignItems:"center",gap:8,borderRadius:12,border:`1px solid ${C.border}`,background:C.card,padding:"6px 10px",minHeight:40}}>
     <textarea ref={iRef} value={inp}
       onChange={e=>{setInp(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,100)+"px";}}
-      onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
       placeholder="Plan anpassen..."
       rows={1} disabled={ld}
       style={{flex:1,border:"none",outline:"none",resize:"none",background:"transparent",color:C.text,fontSize:16,lineHeight:"24px",padding:"2px 0",margin:0,maxHeight:100,fontFamily:"inherit",display:"block"}}/>
