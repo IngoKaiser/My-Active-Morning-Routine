@@ -167,7 +167,13 @@ const send = async () => {
       method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({system:SYS, messages:apiMsgs})
     });
-    if (!r.ok) { const err = await r.text(); throw new Error(`API ${r.status}: ${err.slice(0,100)}`); }
+
+    if (!r.ok) {
+      let errData = {};
+      try { errData = await r.json(); } catch(e) {}
+      throw { code: errData.errorCode || 'UNKNOWN', status: r.status, retryAfter: errData.retryAfter, detail: errData.detail };
+    }
+
     const d = await r.json();
     const fullText = d.content?.map(b => b.type==="text" ? b.text : "").join("") || "Keine Antwort erhalten.";
 
@@ -176,10 +182,49 @@ const send = async () => {
     updateMsgs(p => [...p, aiMsg]);
   } catch(e) {
     console.error("Chat error:", e);
-    updateMsgs(p => [...p, { role:"assistant", content:`Fehler: ${e.message || "Verbindungsproblem"}.`, id:Date.now()+"e" }]);
+    const msg = formatError(e);
+    updateMsgs(p => [...p, { role:"assistant", content: msg, id:Date.now()+"e" }]);
   }
   setLd(false);
 };
+
+function formatError(e) {
+  // Network / fetch failures
+  if (e instanceof TypeError || e.message?.includes("fetch") || e.message?.includes("Failed")) {
+    return "**Keine Verbindung zum Server.** Prüfe deine Internetverbindung und versuche es erneut.";
+  }
+
+  const code = e.code || '';
+  const retry = e.retryAfter;
+
+  switch(code) {
+    case 'RATE_LIMIT': {
+      if (retry) {
+        const min = Math.ceil(retry / 60);
+        return `**Nutzungslimit erreicht.** Bitte warte ${min > 1 ? `${min} Minuten` : "eine Minute"} und versuche es dann erneut.`;
+      }
+      return "**Nutzungslimit erreicht.** Bitte warte ein paar Minuten und versuche es dann erneut.";
+    }
+    case 'AUTH_FAILED':
+      return "**Authentifizierung fehlgeschlagen.** Der API-Schlüssel ist ungültig oder abgelaufen. Bitte in den Vercel-Einstellungen prüfen.";
+    case 'NO_API_KEY':
+      return "**Kein API-Schlüssel konfiguriert.** Bitte den Anthropic API-Key in den Vercel-Umgebungsvariablen hinterlegen.";
+    case 'OVERLOADED':
+      return "**Der KI-Service ist gerade überlastet.** Das passiert bei hoher Nachfrage. Bitte in 1–2 Minuten nochmal versuchen.";
+    case 'TIMEOUT':
+      return "**Die Anfrage hat zu lange gedauert.** Versuche eine kürzere Anfrage — z.B. nur einen einzelnen Tag ändern statt den ganzen Wochenplan.";
+    case 'BAD_REQUEST':
+      return `**Die Anfrage konnte nicht verarbeitet werden.** ${e.detail ? e.detail : "Versuche eine einfachere Formulierung."}`;
+    case 'NETWORK':
+      return "**Netzwerkfehler.** Der Server konnte den KI-Dienst nicht erreichen. Bitte in ein paar Sekunden erneut versuchen.";
+    case 'SERVER_ERROR':
+      return "**Serverfehler.** Es gibt ein technisches Problem. Bitte in ein paar Minuten erneut versuchen.";
+    default:
+      if (e.status >= 500) return "**Serverfehler.** Bitte in ein paar Minuten erneut versuchen.";
+      if (e.status === 0 || !e.status) return "**Keine Verbindung.** Prüfe deine Internetverbindung und versuche es erneut.";
+      return `**Unbekannter Fehler** (${e.status || ""}). Bitte erneut versuchen.`;
+  }
+}
 
 // Accept a single proposal
 const acceptProposal = (msgId, proposalIdx) => {
