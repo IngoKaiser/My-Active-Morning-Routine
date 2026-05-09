@@ -84,6 +84,17 @@ Es gibt nur 3 Sektionen pro Tag:
 Detail-Formate: "30 Sek." | "3×40 Sek." | "30 Sek./Seite" | "3×25 Sek./Seite" | "2 Min."
 "/Seite" = beidseitig (Links+Rechts), "/Bein" und "/Arm" ebenfalls.
 
+ZEITBERECHNUNG — so wird die Gesamtdauer einer Übung berechnet:
+- "30 Sek." = 30s
+- "3×40 Sek." = 3 Sätze × 40s + 2 Satzpausen × pauseEx = 120s + 2×pauseEx
+- "30 Sek./Seite" = 30s Links + 30s Rechts = 60s
+- "3×25 Sek./Seite" = 3 Sätze × (25s L + 25s R) + 2 Satzpausen × pauseEx = 150s + 2×pauseEx
+Zwischen Übungen gibt es eine Pause von pauseEx Sekunden.
+Zwischen Sektionen (Warmup→Training, Training→Cooldown) gibt es 10-15s Übergang.
+
+ZEITVORGABEN EINHALTEN:
+Wenn der Nutzer eine Gesamtdauer vorgibt (z.B. "30 Minuten"), berechne die Gesamtzeit aller Übungen inkl. aller Sätze, Seiten, Satzpausen und Übungspausen. Passe Übungsanzahl, Satzzahl oder Übungsdauer an bis die Zeitvorgabe erfüllt wird. Gib die geschätzte Gesamtzeit in der Antwort an.
+
 5 Tage (Index 0-4): MO, DI, MI, DO, FR. Gib nur geänderte Felder in changes zurück.
 Wenn der Nutzer den Plan sehen will, beschreibe ihn kurz ohne JSON.
 
@@ -131,7 +142,12 @@ const updateMsgs = (fn) => { setMsgs(prev => { const next = typeof fn === "funct
 
 useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs,ld]);
 
-const ctx=()=>{return days.map((d,i)=>{const s=[];["warmup","main","cooldown"].forEach(k=>{if(d[k]?.length)s.push(`${k}:${d[k].map(e=>`${e.name}(${e.detail})`).join(",")}`);});return`${DL[i]}-${d.title}\n${s.join("\n")}`;}).join("\n\n");};
+const ctx=()=>{return days.map((d,i)=>{
+  const s=[];["warmup","main","cooldown"].forEach(k=>{if(d[k]?.length)s.push(`${k}:${d[k].map(e=>`${e.name}(${e.detail})`).join(",")}`);});
+  // Calculate actual total time for this day
+  const dayTl=buildTimeline(d);const dayTotal=totalSeconds(dayTl);
+  return`${DL[i]}-${d.title} [${Math.round(dayTotal/60)} min, pauseEx:${d.pauseEx}s]\n${s.join("\n")}`;
+}).join("\n\n");};
 
 // Parse JSON blocks from AI response, return {text, proposals[]}
 const parseResponse = (txt) => {
@@ -392,7 +408,16 @@ return(
 
 /* ═══ PERSISTENCE ═══ */
 const SK="mam-training-plan";
-function loadPlan(){try{const s=localStorage.getItem(SK);if(s){const p=JSON.parse(s);if(Array.isArray(p)&&p.length===5)return p;}}catch(e){}return null;}
+function loadPlan(){try{const s=localStorage.getItem(SK);if(s){let p=JSON.parse(s);if(Array.isArray(p)&&p.length===5){
+// Migrate legacy plans: merge core/extra into main, then delete
+p=p.map(d=>{
+  if(d.core?.length||d.extra?.length){
+    d.main=[...(d.main||[]),...(d.core||[]),...(d.extra||[])];
+    d.core=[];d.extra=[];
+  }
+  return d;
+});
+return p;}}}catch(e){}return null;}
 function savePlan(d){try{localStorage.setItem(SK,JSON.stringify(d));}catch(e){}}
 
 /* ═══ APP ═══ */
@@ -420,7 +445,10 @@ const cSide=step?.type==="exercise"&&step.sides?(phase%2===0?"L":"R"):null;
 const cSet=step?.type==="exercise"?Math.floor(phase/(step.sides?2:1))+1:0;
 
 const resetPlan=()=>{if(confirm("Plan auf Standard zurücksetzen?")){try{localStorage.removeItem(SK);}catch(e){}setDays(JSON.parse(JSON.stringify(DEFAULT_DAYS)));clearInterval(tick.current);setCur(-1);setPhase(0);setRem(0);setRunning(false);setDone(new Set());pAdv.current=false;}};
-const updDay=useCallback((i,ch)=>{setDays(p=>{const n=JSON.parse(JSON.stringify(p));if(i>=0&&i<n.length)Object.keys(ch).forEach(k=>{n[i][k]=ch[k];});return n;});if(i===dayIdx){clearInterval(tick.current);setCur(-1);setPhase(0);setRem(0);setRunning(false);setDone(new Set());pAdv.current=false;}},[dayIdx]);
+const updDay=useCallback((i,ch)=>{setDays(p=>{const n=JSON.parse(JSON.stringify(p));if(i>=0&&i<n.length){Object.keys(ch).forEach(k=>{n[i][k]=ch[k];});
+// When main is updated, clear legacy core/extra to prevent ghost exercises
+if(ch.main){n[i].core=[];n[i].extra=[];}
+}return n;});if(i===dayIdx){clearInterval(tick.current);setCur(-1);setPhase(0);setRem(0);setRunning(false);setDone(new Set());pAdv.current=false;}},[dayIdx]);
 
 useEffect(()=>{clearInterval(tick.current);setCur(-1);setPhase(0);setRem(0);setRunning(false);setDone(new Set());setInSP(false);},[dayIdx]);
 useEffect(()=>{if(cur<0||cur>=tl.length)return;const s=tl[cur];setPhase(0);setInSP(false);setRem(s.type==="exercise"?s.secPerPhase:s.seconds);
