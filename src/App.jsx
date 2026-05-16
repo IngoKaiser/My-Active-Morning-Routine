@@ -139,8 +139,8 @@ const endRef=useRef(null),iRef=useRef(null);
 
 const updateMsgs = (fn) => { setMsgs(prev => { const next = typeof fn === "function" ? fn(prev) : fn; saveChat(next); return next; }); };
 
-// Scroll to bottom on new messages, loading, or when chat opens
-useEffect(()=>{if(open) setTimeout(()=>endRef.current?.scrollIntoView({behavior:"smooth"}),80);},[msgs,ld,open]);
+// Scroll to bottom only on new messages (not on open — column-reverse handles that)
+useEffect(()=>{if(open&&endRef.current) endRef.current.scrollIntoView({behavior:"smooth"});},[msgs,ld]);
 
 // Lock body scroll when chat is open (prevents iOS double-scroll)
 useEffect(()=>{
@@ -329,19 +329,18 @@ return(
   </div>
 </div>
 
-{/* Messages */}
-<div style={{flex:1,overflowY:"auto",padding:"16px 16px",display:"flex",flexDirection:"column",gap:8}}>
-{msgs.map((m,i)=>(
+{/* Messages — column-reverse starts at bottom without JS scroll */}
+<div style={{flex:1,overflowY:"auto",padding:"16px",display:"flex",flexDirection:"column-reverse",gap:8}}>
+<div ref={endRef}/>
+{ld && <div className="mi" style={{display:"flex",justifyContent:"flex-start"}}><div style={{borderRadius:16,padding:"12px 16px",display:"flex",gap:6,alignItems:"center",background:C.card,border:`1px solid ${C.border}`,borderBottomLeftRadius:6}}>{[0,1,2].map(j=><span key={j} style={{width:6,height:6,borderRadius:"50%",background:C.border,animation:`pulse 1.2s ease-in-out ${j*0.15}s infinite`}}/>)}</div></div>}
+{[...msgs].reverse().map((m,i)=>(
 <div key={m.id||i} className="mi" style={{display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start",gap:6}}>
-  {/* Message bubble */}
   <div style={{maxWidth:"85%",borderRadius:16,padding:"10px 14px",fontSize:14,lineHeight:1.5,
     background:m.role==="user"?C.accent:C.card,color:m.role==="user"?"#fff":C.text,
     border:m.role!=="user"?`1px solid ${C.border}`:undefined,
     borderBottomRightRadius:m.role==="user"?6:16,borderBottomLeftRadius:m.role!=="user"?6:16}}>
     {m.role==="user"?<span style={{whiteSpace:"pre-wrap"}}>{m.content}</span>:<MdText text={m.content} color={C.text}/>}
   </div>
-
-  {/* Proposal cards */}
   {m.proposals?.map((p,pi) => (
     <div key={pi} style={{maxWidth:"85%",borderRadius:12,padding:"10px 14px",fontSize:13,
       background:p.status==="accepted"?C.doneBg:p.status==="rejected"?"#fafafa":C.accentSoft,
@@ -353,58 +352,46 @@ return(
           {p.dayLabel}: {p.changes.title || "Anpassung"}
         </span>
       </div>
-      {/* Show exercise summary */}
       <div style={{fontSize:12,color:C.muted,marginBottom:p.status==="pending"?8:0}}>
         {["warmup","main","cooldown"].map(k => p.changes[k]?.length ? `${k}: ${p.changes[k].map(e=>e.name).join(", ")}` : null).filter(Boolean).join(" · ")}
         {p.changes.pauseEx && ` · Pause: ${p.changes.pauseEx}s`}
       </div>
-      {/* Action buttons — only for pending */}
       {p.status==="pending" && (
         <div style={{display:"flex",gap:8}}>
-          <button onClick={()=>acceptProposal(m.id,pi)} style={{padding:"5px 14px",borderRadius:8,border:"none",background:C.accent,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer"}}>
-            Übernehmen
-          </button>
-          <button onClick={()=>rejectProposal(m.id,pi)} style={{padding:"5px 14px",borderRadius:8,border:`1px solid ${C.border}`,background:C.card,color:C.muted,fontSize:12,cursor:"pointer"}}>
-            Verwerfen
-          </button>
+          <button onClick={()=>acceptProposal(m.id,pi)} style={{padding:"5px 14px",borderRadius:8,border:"none",background:C.accent,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer"}}>Übernehmen</button>
+          <button onClick={()=>rejectProposal(m.id,pi)} style={{padding:"5px 14px",borderRadius:8,border:`1px solid ${C.border}`,background:C.card,color:C.muted,fontSize:12,cursor:"pointer"}}>Verwerfen</button>
         </div>
       )}
       {p.status==="accepted" && <span style={{fontSize:11,color:C.done}}>Übernommen</span>}
       {p.status==="rejected" && <span style={{fontSize:11,color:C.muted}}>Verworfen</span>}
     </div>
   ))}
-
-  {/* Accept all button when multiple pending proposals */}
   {m.proposals && m.proposals.filter(p=>p.status==="pending").length > 1 && (
-    <button onClick={()=>acceptAll(m.id)} style={{padding:"6px 16px",borderRadius:8,border:"none",background:C.text,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",alignSelf:"flex-start"}}>
-      Alle übernehmen
-    </button>
+    <button onClick={()=>acceptAll(m.id)} style={{padding:"6px 16px",borderRadius:8,border:"none",background:C.text,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",alignSelf:"flex-start"}}>Alle übernehmen</button>
   )}
 </div>
 ))}
-{ld && <div className="mi" style={{display:"flex",justifyContent:"flex-start"}}><div style={{borderRadius:16,padding:"12px 16px",display:"flex",gap:6,alignItems:"center",background:C.card,border:`1px solid ${C.border}`,borderBottomLeftRadius:6}}>{[0,1,2].map(j=><span key={j} style={{width:6,height:6,borderRadius:"50%",background:C.border,animation:`pulse 1.2s ease-in-out ${j*0.15}s infinite`}}/>)}</div></div>}
-<div ref={endRef}/>
 </div>
 
-{/* Quick actions */}
-<div style={{padding:"0 16px 8px",display:"flex",gap:8,overflowX:"auto",scrollbarWidth:"none"}}>
-  {[`${DL[di]} kürzer`,"Übung tauschen","Mehr Schultern","Plan zeigen"].map((q,j)=>(
-    <button key={j} onClick={()=>setInp(q)} style={{flexShrink:0,padding:"6px 12px",borderRadius:20,fontSize:12,fontWeight:500,border:`1px solid ${C.border}`,background:"transparent",color:C.sub,cursor:"pointer",whiteSpace:"nowrap"}}>{q}</button>
-  ))}
-</div>
-
-{/* Input */}
-<div style={{padding:"8px 16px 12px",paddingBottom:"max(12px, env(safe-area-inset-bottom))"}}>
-  <div style={{display:"flex",alignItems:"center",gap:8,borderRadius:12,border:`1px solid ${C.border}`,background:C.card,padding:"6px 10px",minHeight:40}}>
-    <textarea ref={iRef} value={inp}
-      onChange={e=>{setInp(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,100)+"px";}}
-      placeholder="Plan anpassen..."
-      rows={1} disabled={ld}
-      style={{flex:1,border:"none",outline:"none",resize:"none",background:"transparent",color:C.text,fontSize:16,lineHeight:"24px",padding:"2px 0",margin:0,maxHeight:100,fontFamily:"inherit",display:"block"}}/>
-    <button onClick={send} disabled={!inp.trim()||ld}
-      style={{width:30,height:30,borderRadius:8,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,background:inp.trim()&&!ld?C.accent:"#d6d3d1",color:"#fff",transition:"background 0.2s"}}>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-    </button>
+{/* Quick actions + Input — compact footer */}
+<div style={{borderTop:`1px solid ${C.border}`,background:C.bg}}>
+  <div style={{padding:"8px 16px 4px",display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none"}}>
+    {[`${DL[di]} kürzer`,"Übung tauschen","Mehr Schultern","Plan zeigen"].map((q,j)=>(
+      <button key={j} onClick={()=>setInp(q)} style={{flexShrink:0,padding:"5px 10px",borderRadius:16,fontSize:11,fontWeight:500,border:`1px solid ${C.border}`,background:"transparent",color:C.sub,cursor:"pointer",whiteSpace:"nowrap"}}>{q}</button>
+    ))}
+  </div>
+  <div style={{padding:"6px 16px",paddingBottom:"max(8px, env(safe-area-inset-bottom))"}}>
+    <div style={{display:"flex",alignItems:"center",gap:8,borderRadius:12,border:`1px solid ${C.border}`,background:C.card,padding:"6px 10px",minHeight:38}}>
+      <textarea ref={iRef} value={inp}
+        onChange={e=>{setInp(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,100)+"px";}}
+        placeholder="Plan anpassen..."
+        rows={1} disabled={ld}
+        style={{flex:1,border:"none",outline:"none",resize:"none",background:"transparent",color:C.text,fontSize:16,lineHeight:"24px",padding:"2px 0",margin:0,maxHeight:100,fontFamily:"inherit",display:"block"}}/>
+      <button onClick={send} disabled={!inp.trim()||ld}
+        style={{width:30,height:30,borderRadius:8,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,background:inp.trim()&&!ld?C.accent:"#d6d3d1",color:"#fff",transition:"background 0.2s"}}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
   </div>
 </div>
 
