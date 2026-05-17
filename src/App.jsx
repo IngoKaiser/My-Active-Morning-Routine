@@ -310,10 +310,10 @@ if(!open) return(
 
 // ═══ OPEN STATE ═══
 return(
-<div style={{position:"fixed",inset:0,zIndex:9998,display:"flex",flexDirection:"column",background:"rgba(44,41,37,0.25)",backdropFilter:"blur(8px)",height:"100dvh",overflow:"hidden"}}>
+<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:9998,display:"flex",flexDirection:"column",background:"rgba(44,41,37,0.25)",backdropFilter:"blur(8px)",overflow:"hidden"}}>
 <style>{`@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}.csl{animation:su .25s ease-out}.mi{animation:fi .2s ease-out}`}</style>
 <div style={{flexShrink:0,height:48}} onClick={()=>setOpen(false)}/>
-<div className="csl" style={{flex:1,display:"flex",flexDirection:"column",borderRadius:"16px 16px 0 0",overflow:"hidden",background:C.bg,maxHeight:"calc(100dvh - 48px)",height:"calc(100dvh - 48px)"}}>
+<div className="csl" style={{flex:1,display:"flex",flexDirection:"column",borderRadius:"16px 16px 0 0",overflow:"hidden",background:C.bg}}>
 
 {/* Header */}
 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 20px",borderBottom:`1px solid ${C.border}`}}>
