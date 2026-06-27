@@ -27,6 +27,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
         max_tokens: 8000,
+        stream: true,
         system: system || '',
         messages: messages || [],
       }),
@@ -53,8 +54,23 @@ export default async function handler(req, res) {
       });
     }
 
-    const data = await response.json();
-    return res.status(200).json(data);
+    // Pipe Anthropic's SSE stream directly to the client
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        res.write(decoder.decode(value, { stream: true }));
+      }
+    } finally {
+      res.end();
+    }
+    return;
   } catch (err) {
     console.error('Proxy error:', err);
 

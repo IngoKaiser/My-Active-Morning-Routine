@@ -197,12 +197,51 @@ const send = async () => {
       throw { code: errData.errorCode || 'UNKNOWN', status: r.status, retryAfter: errData.retryAfter, detail: errData.detail };
     }
 
-    const d = await r.json();
-    const fullText = d.content?.map(b => b.type==="text" ? b.text : "").join("") || "Keine Antwort erhalten.";
+    // Read SSE stream and accumulate text chunks
+    const streamId = Date.now() + "a";
+    let fullText = '';
+    let buf = '';
+    let started = false;
 
-    const { text, proposals } = parseResponse(fullText);
-    const aiMsg = { role:"assistant", content: text, id: Date.now()+"a", proposals: proposals.length ? proposals : undefined };
-    updateMsgs(p => [...p, aiMsg]);
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const json = line.slice(6).trim();
+        if (!json) continue;
+        try {
+          const evt = JSON.parse(json);
+          if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+            fullText += evt.delta.text;
+            if (!started) {
+              started = true;
+              setLd(false);
+              setMsgs(p => [...p, { role:"assistant", content: fullText, id: streamId }]);
+            } else {
+              setMsgs(p => p.map(m => m.id === streamId ? {...m, content: fullText} : m));
+            }
+          }
+        } catch(e) {}
+      }
+    }
+
+    // Finalize: parse JSON proposals and persist to localStorage
+    const { text, proposals } = parseResponse(fullText || "Keine Antwort erhalten.");
+    const aiMsg = { role:"assistant", content: text, id: streamId, proposals: proposals.length ? proposals : undefined };
+    if (!started) {
+      updateMsgs(p => [...p, aiMsg]);
+    } else {
+      updateMsgs(p => p.map(m => m.id === streamId ? aiMsg : m));
+    }
   } catch(e) {
     console.error("Chat error:", e);
     const msg = formatError(e);
