@@ -1,21 +1,29 @@
-// Vercel Serverless Function timeout (Hobby: max 60s, Pro: max 300s)
 export const config = {
-  maxDuration: 60,
+  runtime: 'edge',
 };
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ errorCode: 'METHOD_NOT_ALLOWED' });
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...CORS, 'Content-Type': 'application/json' },
+  });
+}
+
+export default async function handler(req) {
+  if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: CORS });
+  if (req.method !== 'POST') return jsonResponse({ errorCode: 'METHOD_NOT_ALLOWED' }, 405);
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return res.status(500).json({ errorCode: 'NO_API_KEY' });
+  if (!apiKey) return jsonResponse({ errorCode: 'NO_API_KEY' }, 500);
 
   try {
-    const { system, messages } = req.body;
+    const { system, messages } = await req.json();
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -39,9 +47,7 @@ export default async function handler(req, res) {
       try { errParsed = JSON.parse(errText); } catch(e) {}
       const retryAfter = response.headers.get('retry-after');
 
-      console.error('Anthropic API error:', response.status, errText);
-
-      return res.status(response.status).json({
+      return jsonResponse({
         errorCode: response.status === 429 ? 'RATE_LIMIT'
           : response.status === 401 ? 'AUTH_FAILED'
           : response.status === 400 ? 'BAD_REQUEST'
@@ -51,35 +57,23 @@ export default async function handler(req, res) {
         status: response.status,
         retryAfter: retryAfter ? parseInt(retryAfter) : null,
         detail: errParsed?.error?.message || null,
-      });
+      }, response.status);
     }
 
-    // Pipe Anthropic's SSE stream directly to the client
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('X-Accel-Buffering', 'no');
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        res.write(decoder.decode(value, { stream: true }));
-      }
-    } finally {
-      res.end();
-    }
-    return;
+    // Pass Anthropic's SSE stream directly to the client — no manual piping needed
+    return new Response(response.body, {
+      headers: {
+        ...CORS,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+      },
+    });
   } catch (err) {
     console.error('Proxy error:', err);
-
-    const isTimeout = err.name === 'TimeoutError' || err.message?.includes('timeout') || err.message?.includes('FUNCTION_INVOCATION_TIMEOUT');
-    const isNetwork = err.message?.includes('fetch') || err.message?.includes('ECONNREFUSED') || err.message?.includes('network');
-
-    return res.status(isTimeout ? 504 : 500).json({
-      errorCode: isTimeout ? 'TIMEOUT' : isNetwork ? 'NETWORK' : 'INTERNAL',
+    const isTimeout = err.name === 'TimeoutError' || err.message?.includes('timeout');
+    return jsonResponse({
+      errorCode: isTimeout ? 'TIMEOUT' : 'INTERNAL',
       detail: err.message,
-    });
+    }, isTimeout ? 504 : 500);
   }
 }
