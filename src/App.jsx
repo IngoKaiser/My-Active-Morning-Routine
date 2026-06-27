@@ -182,8 +182,14 @@ const send = async () => {
 
   try {
     const c = `AKTUELLER PLAN:\n${ctx()}\n\nAusgewählter Tag: ${DL[di]} (Index ${di})\n\nAnfrage: ${t}`;
-    // Build API history (skip init, only user/assistant text)
-    const hist = msgs.filter(m => m.role === "user" || m.role === "assistant").slice(-8).map(m => ({role:m.role, content: m.content}));
+    // Build API history — exclude initMsg, ensure messages start with user role
+    const rawHist = msgs
+      .filter(m => m.role === "user" || m.role === "assistant")
+      .filter(m => m.id !== "init")
+      .slice(-8)
+      .map(m => ({role:m.role, content: m.content}));
+    const firstUserIdx = rawHist.findIndex(m => m.role === "user");
+    const hist = firstUserIdx >= 0 ? rawHist.slice(firstUserIdx) : [];
     const apiMsgs = [...hist, {role:"user", content:c}];
 
     const r = await fetch("/api/chat", {
@@ -202,6 +208,7 @@ const send = async () => {
     let fullText = '';
     let buf = '';
     let started = false;
+    let streamError = null;
 
     const reader = r.body.getReader();
     const decoder = new TextDecoder();
@@ -220,7 +227,17 @@ const send = async () => {
         if (!json) continue;
         try {
           const evt = JSON.parse(json);
-          if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+          if (evt.type === 'error') {
+            const errType = evt.error?.type || '';
+            streamError = {
+              code: errType.includes('overloaded') ? 'OVERLOADED'
+                  : errType.includes('rate_limit') ? 'RATE_LIMIT'
+                  : 'SERVER_ERROR',
+              status: 500,
+              detail: evt.error?.message,
+            };
+            break;
+          } else if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
             fullText += evt.delta.text;
             if (!started) {
               started = true;
@@ -232,7 +249,10 @@ const send = async () => {
           }
         } catch(e) {}
       }
+      if (streamError) break;
     }
+
+    if (streamError) throw streamError;
 
     // Finalize: parse JSON proposals and persist to localStorage
     const { text, proposals } = parseResponse(fullText || "Keine Antwort erhalten.");
@@ -251,9 +271,14 @@ const send = async () => {
 };
 
 function formatError(e) {
-  // Network / fetch failures
+  // Network / fetch failures (TypeError)
   if (e instanceof TypeError || e.message?.includes("fetch") || e.message?.includes("Failed")) {
     return "**Keine Verbindung zum Server.** Prüfe deine Internetverbindung und versuche es erneut.";
+  }
+
+  // Stream interrupted (DOMException: AbortError, NetworkError during reader.read())
+  if (typeof DOMException !== "undefined" && e instanceof DOMException) {
+    return "**Übertragung unterbrochen.** Die Verbindung wurde während der Antwort getrennt. Bitte erneut versuchen.";
   }
 
   const code = e.code || '';
