@@ -203,11 +203,12 @@ const send = async () => {
       throw { code: errData.errorCode || 'UNKNOWN', status: r.status, retryAfter: errData.retryAfter, detail: errData.detail };
     }
 
-    // Read SSE stream and accumulate text chunks
+    // Read SSE stream, accumulating text chunks in the background while the
+    // spinner keeps showing — the finished message is posted in one step so
+    // the user never sees raw partial/JSON text flash by.
     const streamId = Date.now() + "a";
     let fullText = '';
     let buf = '';
-    let started = false;
     let streamError = null;
 
     const reader = r.body.getReader();
@@ -239,13 +240,6 @@ const send = async () => {
             break;
           } else if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
             fullText += evt.delta.text;
-            if (!started) {
-              started = true;
-              setLd(false);
-              setMsgs(p => [...p, { role:"assistant", content: fullText, id: streamId }]);
-            } else {
-              setMsgs(p => p.map(m => m.id === streamId ? {...m, content: fullText} : m));
-            }
           }
         } catch(e) {}
       }
@@ -254,14 +248,10 @@ const send = async () => {
 
     if (streamError) throw streamError;
 
-    // Finalize: parse JSON proposals and persist to localStorage
+    // Finalize: parse JSON proposals, post the message in one step, persist to localStorage
     const { text, proposals } = parseResponse(fullText || "Keine Antwort erhalten.");
     const aiMsg = { role:"assistant", content: text, id: streamId, proposals: proposals.length ? proposals : undefined };
-    if (!started) {
-      updateMsgs(p => [...p, aiMsg]);
-    } else {
-      updateMsgs(p => p.map(m => m.id === streamId ? aiMsg : m));
-    }
+    updateMsgs(p => [...p, aiMsg]);
   } catch(e) {
     console.error("Chat error:", e);
     const msg = formatError(e);
